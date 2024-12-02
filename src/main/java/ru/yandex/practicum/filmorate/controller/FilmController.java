@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -24,9 +24,10 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film add(@Valid @RequestBody Film film) {
+    public Film add(@Validated(Film.Create.class) @RequestBody Film film) {
         log.info("Получен объект для создания {}", film);
-        checkFilm(film);
+        if (film.getReleaseDate() != null)
+            checkFilm(film);
         film.setId(getNextId());
         films.put(film.getId(), film);
         log.info("Запись успешно создана {}", film);
@@ -34,14 +35,27 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film update(@Valid @RequestBody Film film) {
+    public Film update(@Validated(Film.Update.class) @RequestBody Film film) {
         log.info("Получен объект для обновления {}", film);
         if (!films.containsKey(film.getId()))
             throw new ValidationException("Id фильма должен быть указан, id=" + film.getId());
-        checkFilm(film);
-        films.put(film.getId(), film);
-        log.info("Запись успешно обновлена {}", films.get(film.getId()));
-        return films.get(film.getId());
+        Film updatedFilm = films.get(film.getId());
+        if (film.getName() != null) {
+            if (film.getName().isBlank())
+                throw new ValidationException("Название фильма не может быть пустым");
+            updatedFilm.setName(film.getName());
+        }
+        if (film.getDescription() != null)
+            updatedFilm.setDescription(film.getDescription());
+        if (film.getReleaseDate() != null) {
+            checkFilm(film);
+            updatedFilm.setReleaseDate(film.getReleaseDate());
+        }
+        if (film.getDuration() != null)
+            updatedFilm.setDuration(film.getDuration());
+        films.put(updatedFilm.getId(), updatedFilm);
+        log.info("Запись успешно обновлена {}", films.get(updatedFilm.getId()));
+        return films.get(updatedFilm.getId());
     }
 
     private long getNextId() {

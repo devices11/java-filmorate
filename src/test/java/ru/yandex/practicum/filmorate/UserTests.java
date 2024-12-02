@@ -157,10 +157,25 @@ public class UserTests {
 
         mockMvc.perform(put("/users").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isInternalServerError())
+                .andExpect(status().isBadRequest())
                 .andExpect(result -> assertInstanceOf(ValidationException.class, result.getResolvedException()));
     }
 
+    @DisplayName("PUT /users. Обновление пользователя, параметры null")
+    @Test
+    void updateUserWithNull() throws Exception {
+        User updateUser = user.toBuilder()
+                .id(1L)
+                .email(null)
+                .login(null)
+                .name(null)
+                .birthday(null)
+                .build();
+        mockMvc.perform(put("/users").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateUser)))
+                .andExpect(status().isOk())
+                .andExpect(result -> assertThat(result.getResponse().getContentAsString())
+                        .isEqualToIgnoringWhitespace(objectMapper.writeValueAsString(user)));
+    }
+
 }
-
-

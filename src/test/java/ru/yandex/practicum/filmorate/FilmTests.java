@@ -68,10 +68,36 @@ public class FilmTests {
                         .isEqualToIgnoringWhitespace(resp.toString()));
     }
 
+    @DisplayName("POST /films. Параметры с null")
+    @Order(3)
+    @Test
+    void addFilmWithNull() throws Exception {
+        film.setId(2L);
+        film.setDescription(null);
+        film.setReleaseDate(null);
+        film.setDuration(null);
+
+        mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(film)))
+                .andExpect(status().isOk())
+                .andExpect(result -> assertThat(result.getResponse().getContentAsString())
+                        .isEqualToIgnoringWhitespace(objectMapper.writeValueAsString(film)));
+    }
+
     @DisplayName("POST /films. Имя пустое")
     @Test
     void addFilmNameBlank() throws Exception {
         film.setName("");
+
+        mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(film)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @DisplayName("POST /films. Имя null")
+    @Test
+    void addFilmNameNull() throws Exception {
+        film.setName(null);
 
         mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(film)))
@@ -95,7 +121,7 @@ public class FilmTests {
 
         mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(film)))
-                .andExpect(status().isInternalServerError())
+                .andExpect(status().isBadRequest())
                 .andExpect(result -> assertInstanceOf(ValidationException.class, result.getResolvedException()));
     }
 
@@ -132,7 +158,25 @@ public class FilmTests {
 
         mockMvc.perform(put("/films").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(film)))
-                .andExpect(status().isInternalServerError())
+                .andExpect(status().isBadRequest())
                 .andExpect(result -> assertInstanceOf(ValidationException.class, result.getResolvedException()));
+    }
+
+    @DisplayName("PUT /films. Обновление фильма, параметры с null")
+    @Test
+    void updateFilmWithNull() throws Exception {
+        Film updateFilm = film.toBuilder()
+                .id(1L)
+                .name(null)
+                .description(null)
+                .releaseDate(null)
+                .duration(null)
+                .build();
+
+        mockMvc.perform(put("/films").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateFilm)))
+                .andExpect(status().isOk())
+                .andExpect(result -> assertThat(result.getResponse().getContentAsString())
+                        .isEqualToIgnoringWhitespace(objectMapper.writeValueAsString(film)));
     }
 }
