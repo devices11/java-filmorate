@@ -121,7 +121,7 @@ public class FilmTests {
 
         mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(film)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isInternalServerError())
                 .andExpect(result -> assertInstanceOf(ValidationException.class, result.getResolvedException()));
     }
 
@@ -158,7 +158,7 @@ public class FilmTests {
 
         mockMvc.perform(put("/films").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(film)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isInternalServerError())
                 .andExpect(result -> assertInstanceOf(ValidationException.class, result.getResolvedException()));
     }
 

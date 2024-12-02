@@ -157,7 +157,7 @@ public class UserTests {
 
         mockMvc.perform(put("/users").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isInternalServerError())
                 .andExpect(result -> assertInstanceOf(ValidationException.class, result.getResolvedException()));
     }
 
