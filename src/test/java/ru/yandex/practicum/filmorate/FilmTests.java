@@ -28,7 +28,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class FilmTests {
     private Film film;
-    private User user;
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,7 +44,7 @@ public class FilmTests {
                 .releaseDate(LocalDate.parse("2014-08-20"))
                 .duration(88)
                 .build();
-        user = User.builder()
+        User user = User.builder()
                 .login("test")
                 .email("test@test.com")
                 .build();
