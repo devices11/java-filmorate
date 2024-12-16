@@ -1,74 +1,69 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.util.validation.groups.Create;
+import ru.yandex.practicum.filmorate.util.validation.groups.Update;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    private final Map<Long, User> users = new HashMap<>();
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/{id}")
+    public User findById(@PathVariable long id) {
+        return userService.findById(id);
+    }
 
     @GetMapping
     public Collection<User> findAll() {
-        return users.values();
+        return userService.findAll();
     }
 
     @PostMapping
-    public User create(@Validated(User.Create.class) @RequestBody User user) {
-        log.info("Получен объект для создания {}", user);
-        user.setId(getNextId());
-        if (user.getName() == null || user.getName().isEmpty() || user.getName().isBlank())
-            user.setName(user.getLogin());
-        users.put(user.getId(), user);
-        log.info("Пользователь успешно создан {}", user);
-        return user;
+    @ResponseStatus(HttpStatus.CREATED)
+    public User create(@Validated(Create.class) @RequestBody User user) {
+        return userService.create(user);
     }
 
     @PutMapping
-    public User update(@Validated(User.Update.class) @RequestBody User user) {
-        log.info("Получен объект для обновления {}", user);
-        if (user.getId() == null)
-            throw new ValidationException("Id должен быть указан");
-        if (!users.containsKey(user.getId()))
-            throw new ValidationException("Пользователь не найден");
-        User updatedUser = users.get(user.getId());
-        if (user.getEmail() != null) {
-            if (user.getEmail().isBlank())
-                throw new ValidationException("email не может быть пустым");
-            updatedUser.setEmail(user.getEmail());
-        }
-        if (user.getLogin() != null) {
-            if (user.getLogin().isBlank())
-                throw new ValidationException("Логин не может быть пустым");
-            updatedUser.setLogin(user.getLogin());
-        }
-        if (user.getName() != null) {
-            if (user.getName().isBlank())
-                updatedUser.setName(user.getLogin());
-            else updatedUser.setName(user.getName());
-        }
-        if (user.getBirthday() != null)
-            updatedUser.setBirthday(user.getBirthday());
-        users.put(user.getId(), updatedUser);
-        log.info("Запись успешно обновлена {}", users.get(user.getId()));
-        return users.get(user.getId());
+    public User update(@Validated(Update.class) @RequestBody User user) {
+        return userService.update(user);
     }
 
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @GetMapping("/{id}/friends")
+    public Collection<User> getFriends(@PathVariable long id) {
+        return userService.getFriends(id);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public User addFriend(@Validated(Update.class) @PathVariable long id,
+                          @PathVariable long friendId) {
+        return userService.addFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteFriend(@Validated(Update.class) @PathVariable long id,
+                             @PathVariable long friendId) {
+        userService.deleteFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public Collection<User> commonFriends(@Validated(Update.class) @PathVariable long id,
+                                          @Validated(Update.class) @PathVariable long otherId) {
+        return userService.commonFriends(id, otherId);
     }
 }
