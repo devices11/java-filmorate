@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -11,16 +11,11 @@ import ru.yandex.practicum.filmorate.util.validation.groups.Update;
 
 import java.util.Collection;
 
-@Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
-
     private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
 
     @GetMapping("/{id}")
     public User findById(@PathVariable long id) {
@@ -49,21 +44,21 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public User addFriend(@Validated(Update.class) @PathVariable long id,
+    public User addFriend(@PathVariable long id,
                           @PathVariable long friendId) {
         return userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteFriend(@Validated(Update.class) @PathVariable long id,
+    public void deleteFriend(@PathVariable long id,
                              @PathVariable long friendId) {
         userService.deleteFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public Collection<User> commonFriends(@Validated(Update.class) @PathVariable long id,
-                                          @Validated(Update.class) @PathVariable long otherId) {
+    public Collection<User> commonFriends(@PathVariable long id,
+                                          @PathVariable long otherId) {
         return userService.commonFriends(id, otherId);
     }
 }
