@@ -1,74 +1,60 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.util.validation.groups.Create;
+import ru.yandex.practicum.filmorate.util.validation.groups.Update;
 
-import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
-@Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/films")
 public class FilmController {
-    private static final LocalDate CINEMA_BIRTH_DAY = LocalDate.of(1895, 12, 28);
-    private final Map<Long, Film> films = new HashMap<>();
+    private final FilmService filmService;
+
+    @GetMapping("/{id}")
+    public Film findById(@PathVariable long id) {
+        return filmService.findById(id);
+    }
 
     @GetMapping
     public Collection<Film> findAll() {
-        return films.values();
+        return filmService.findAll();
     }
 
     @PostMapping
-    public Film add(@Validated(Film.Create.class) @RequestBody Film film) {
-        log.info("Получен объект для создания {}", film);
-        if (film.getReleaseDate() != null)
-            checkFilm(film);
-        film.setId(getNextId());
-        films.put(film.getId(), film);
-        log.info("Запись успешно создана {}", film);
-        return film;
+    @ResponseStatus(HttpStatus.CREATED)
+    public Film add(@Validated(Create.class) @RequestBody Film film) {
+        return filmService.add(film);
     }
 
     @PutMapping
-    public Film update(@Validated(Film.Update.class) @RequestBody Film film) {
-        log.info("Получен объект для обновления {}", film);
-        if (!films.containsKey(film.getId()))
-            throw new ValidationException("Id фильма должен быть указан, id=" + film.getId());
-        Film updatedFilm = films.get(film.getId());
-        if (film.getName() != null) {
-            if (film.getName().isBlank())
-                throw new ValidationException("Название фильма не может быть пустым");
-            updatedFilm.setName(film.getName());
-        }
-        if (film.getDescription() != null)
-            updatedFilm.setDescription(film.getDescription());
-        if (film.getReleaseDate() != null) {
-            checkFilm(film);
-            updatedFilm.setReleaseDate(film.getReleaseDate());
-        }
-        if (film.getDuration() != null)
-            updatedFilm.setDuration(film.getDuration());
-        films.put(updatedFilm.getId(), updatedFilm);
-        log.info("Запись успешно обновлена {}", films.get(updatedFilm.getId()));
-        return films.get(updatedFilm.getId());
+    public Film update(@Validated(Update.class) @RequestBody Film film) {
+        return filmService.update(film);
     }
 
-    private long getNextId() {
-        long currentMaxId = films.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @PutMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void setLike(@PathVariable long id,
+                        @PathVariable long userId) {
+        filmService.setLike(id, userId);
     }
 
-    private void checkFilm(Film film) {
-        if (film.getReleaseDate().isBefore(CINEMA_BIRTH_DAY))
-            throw new ValidationException("Дата релиза не может быть раньше " + CINEMA_BIRTH_DAY);
+    @DeleteMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteLike(@PathVariable long id,
+                           @PathVariable long userId) {
+        filmService.deleteLike(id, userId);
+    }
+
+    @GetMapping("/popular")
+    public Collection<Film> findPopular(@RequestParam(name = "count",
+            required = false, defaultValue = "10") Long count) {
+        return filmService.findPopular(count);
     }
 }
