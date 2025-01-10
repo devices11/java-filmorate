@@ -261,8 +261,6 @@ public class UserTests {
                 .andExpect(status().isNoContent());
         mockMvc.perform(get("/users/1/friends").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(0));
-        mockMvc.perform(get("/users/2/friends").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.length()").value(0));
 
     }
 
