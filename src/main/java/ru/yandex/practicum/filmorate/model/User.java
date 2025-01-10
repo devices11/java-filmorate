@@ -2,13 +2,12 @@ package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.*;
-import lombok.Data;
 import lombok.Builder;
+import lombok.Data;
 import ru.yandex.practicum.filmorate.util.validation.groups.Create;
 import ru.yandex.practicum.filmorate.util.validation.groups.Update;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder(toBuilder = true)
@@ -30,6 +29,6 @@ public class User {
     @Past(groups = {Create.class, Update.class})
     private LocalDate birthday;
 
-    private Set<Long> friends;
+    private Boolean confirmed;
 
 }

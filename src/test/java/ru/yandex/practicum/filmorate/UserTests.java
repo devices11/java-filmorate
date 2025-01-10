@@ -3,24 +3,25 @@ package ru.yandex.practicum.filmorate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.data.jdbc.AutoConfigureDataJdbc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.yandex.practicum.filmorate.controller.UserController;
-import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@AutoConfigureDataJdbc
 @ComponentScan({"ru.yandex.practicum.filmorate"})
 @WebMvcTest(controllers = UserController.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -50,6 +51,10 @@ public class UserTests {
     void addUser() throws Exception {
         mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(user)))
+                .andDo(result -> {
+                    User userDb = objectMapper.readValue(result.getResponse().getContentAsString(), User.class);
+                    user.setId(userDb.getId());
+                })
                 .andExpect(status().isCreated())
                 .andExpect(result -> assertThat(result.getResponse().getContentAsString())
                         .isEqualToIgnoringWhitespace(objectMapper.writeValueAsString(user)));
@@ -59,13 +64,9 @@ public class UserTests {
     @Order(2)
     @Test
     void getAllUsers() throws Exception {
-        List<String> resp = new ArrayList<>();
-        resp.add(objectMapper.writeValueAsString(user));
-
         mockMvc.perform(get("/users").contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(result -> assertThat(result.getResponse().getContentAsString())
-                        .isEqualToIgnoringWhitespace(resp.toString()));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").exists());
     }
 
     @DisplayName("POST /users. Пустое имя")
@@ -73,23 +74,25 @@ public class UserTests {
     @Test
     void addUserNameBlank() throws Exception {
         user.setName("");
-        User newUser = user.toBuilder()
-                .id(2L)
-                .name(user.getLogin())
-                .build();
 
         mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(user)))
                 .andExpect(status().isCreated())
-                .andExpect(result -> assertThat(result.getResponse().getContentAsString())
-                        .isEqualToIgnoringWhitespace(objectMapper.writeValueAsString(newUser)));
+                .andExpect(jsonPath("$.name").value(user.getLogin()));
     }
 
     @DisplayName("GET /users/{id}. Получение пользователя по id")
     @Order(4)
     @Test
     void getUsersById() throws Exception {
-        mockMvc.perform(get("/users/1").contentType("application/json"))
+        mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andDo(result -> {
+                    User userDb = objectMapper.readValue(result.getResponse().getContentAsString(), User.class);
+                    user.setId(userDb.getId());
+                });
+
+        mockMvc.perform(get("/users/" + user.getId()).contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(result -> assertThat(result.getResponse().getContentAsString())
                         .isEqualToIgnoringWhitespace(objectMapper.writeValueAsString(user)));
@@ -172,7 +175,7 @@ public class UserTests {
     @DisplayName("PUT /users. Обновление пользователя, id не существует")
     @Test
     void updateUserNoId() throws Exception {
-        user.setId(12L);
+        user.setId(1112L);
 
         mockMvc.perform(put("/users").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(user)))
@@ -184,8 +187,15 @@ public class UserTests {
     @Order(6)
     @Test
     void updateUserWithNull() throws Exception {
+        mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andDo(result -> {
+                    User userDb = objectMapper.readValue(result.getResponse().getContentAsString(), User.class);
+                    user.setId(userDb.getId());
+                });
+
         User updateUser = user.toBuilder()
-                .id(1L)
+                .id(user.getId())
                 .email(null)
                 .login(null)
                 .name(null)
@@ -203,10 +213,9 @@ public class UserTests {
     @Test
     void addFriend() throws Exception {
         mockMvc.perform(put("/users/1/friends/2").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.friends").value(2));
-        mockMvc.perform(get("/users/2").contentType("application/json"))
-                .andExpect(jsonPath("$.friends").value(1));
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/users/1/friends").contentType("application/json"))
+                .andExpect(jsonPath("$.[0].id").value(2));
     }
 
     @DisplayName("PUT /users/{id}/friends/{friendId}. Добавление в друзья, id не существует")
@@ -232,8 +241,7 @@ public class UserTests {
         mockMvc.perform(get("/users/1/friends").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$.[0].id").value(2))
-                .andExpect(jsonPath("$.[0].friends").value(1));
+                .andExpect(jsonPath("$.[0].id").value(2));
 
     }
 

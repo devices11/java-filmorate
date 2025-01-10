@@ -1,1 +1,13 @@
 logging.level.org.zalando.logbook: TRACE
+spring:
+  datasource:
+    url: jdbc:h2:file:./db/filmorate;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS filmorate_liquibase
+    username: sa
+    password: password
+    driverClassName: org.h2.Driver
+  liquibase:
+    enabled: true
+    liquibase-schema: filmorate_liquibase
+    default-schema: filmorate
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect

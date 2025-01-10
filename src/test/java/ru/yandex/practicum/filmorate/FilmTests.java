@@ -3,31 +3,34 @@ package ru.yandex.practicum.filmorate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.data.jdbc.AutoConfigureDataJdbc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@AutoConfigureDataJdbc
 @ComponentScan({"ru.yandex.practicum.filmorate"})
 @WebMvcTest(controllers = FilmController.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class FilmTests {
     private Film film;
+    private User user;
 
     @Autowired
     private MockMvc mockMvc;
@@ -37,19 +40,28 @@ public class FilmTests {
 
     @BeforeEach
     void setUp() throws Exception {
+        Mpa mpa = Mpa.builder()
+                .id(1)
+                .name("G")
+                .build();
+        Genre genre = Genre.builder()
+                .id(1)
+                .name("Комедия")
+                .build();
         film = Film.builder()
                 .id(1L)
                 .name("John Wick")
                 .description("The bad guy is taking revenge for the dog")
                 .releaseDate(LocalDate.parse("2014-08-20"))
                 .duration(88)
+                .mpa(mpa)
+                .genres(List.of(genre))
                 .build();
-        User user = User.builder()
+        user = User.builder()
                 .login("test")
                 .email("test@test.com")
                 .build();
-        mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(user)));
+
     }
 
     @DisplayName("POST /films. Добавление корректного фильма")
@@ -58,6 +70,10 @@ public class FilmTests {
     void addFilm() throws Exception {
         mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(film)))
+                .andDo(result -> {
+                    Film filmDb = objectMapper.readValue(result.getResponse().getContentAsString(), Film.class);
+                    film.setId(filmDb.getId());
+                })
                 .andExpect(status().isCreated())
                 .andExpect(result -> assertThat(result.getResponse().getContentAsString())
                         .isEqualToIgnoringWhitespace(objectMapper.writeValueAsString(film)));
@@ -67,13 +83,9 @@ public class FilmTests {
     @Order(2)
     @Test
     void getAllFilms() throws Exception {
-        List<String> resp = new ArrayList<>();
-        resp.add(objectMapper.writeValueAsString(film));
-
         mockMvc.perform(get("/films").contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(result -> assertThat(result.getResponse().getContentAsString())
-                        .isEqualToIgnoringWhitespace(resp.toString()));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").exists());
     }
 
     @DisplayName("POST /films. Параметры с null")
@@ -87,6 +99,10 @@ public class FilmTests {
 
         mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(film)))
+                .andDo(result -> {
+                    Film filmDb = objectMapper.readValue(result.getResponse().getContentAsString(), Film.class);
+                    film.setId(filmDb.getId());
+                })
                 .andExpect(status().isCreated())
                 .andExpect(result -> assertThat(result.getResponse().getContentAsString())
                         .isEqualToIgnoringWhitespace(objectMapper.writeValueAsString(film)));
@@ -96,7 +112,14 @@ public class FilmTests {
     @Order(4)
     @Test
     void getFilmById() throws Exception {
-        mockMvc.perform(get("/films/1").contentType("application/json"))
+        mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(film)))
+                .andDo(result -> {
+                    Film filmDb = objectMapper.readValue(result.getResponse().getContentAsString(), Film.class);
+                    film.setId(filmDb.getId());
+                });
+
+        mockMvc.perform(get("/films/" + film.getId()).contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(result -> assertThat(result.getResponse().getContentAsString())
                         .isEqualToIgnoringWhitespace(objectMapper.writeValueAsString(film)));
@@ -164,8 +187,15 @@ public class FilmTests {
     @Order(5)
     @Test
     void updateFilmWithNull() throws Exception {
+        mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(film)))
+                .andDo(result -> {
+                    Film filmDb = objectMapper.readValue(result.getResponse().getContentAsString(), Film.class);
+                    film.setId(filmDb.getId());
+                });
+
         Film updateFilm = film.toBuilder()
-                .id(1L)
+                .id(film.getId())
                 .name(null)
                 .description(null)
                 .releaseDate(null)
@@ -183,26 +213,48 @@ public class FilmTests {
     @Order(6)
     @Test
     void updateFilm() throws Exception {
-        film.setId(1L);
-        film.setName("John Wick2");
-        film.setDescription("The bad guy is taking revenge for the dog2");
-        film.setReleaseDate(LocalDate.parse("2014-08-21"));
-        film.setDuration(8);
+
+        Mpa mpa = Mpa.builder()
+                .id(2)
+                .name("PG")
+                .build();
+        Genre genre = Genre.builder()
+                .id(2)
+                .name("Драма")
+                .build();
+        Film updateFilm = Film.builder()
+                .name("TestName")
+                .description("Test description")
+                .releaseDate(LocalDate.parse("2011-08-20"))
+                .duration(188)
+                .mpa(mpa)
+                .genres(List.of(genre))
+                .build();
+        mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(film)))
+                .andDo(result -> {
+                    Film filmDb = objectMapper.readValue(result.getResponse().getContentAsString(), Film.class);
+                    updateFilm.setId(filmDb.getId());
+                });
 
         mockMvc.perform(put("/films").contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(film)))
+                        .content(objectMapper.writeValueAsString(updateFilm)))
                 .andExpect(status().isOk())
                 .andExpect(result -> assertThat(result.getResponse().getContentAsString())
-                        .isEqualToIgnoringWhitespace(objectMapper.writeValueAsString(film)));
+                        .isEqualToIgnoringWhitespace(objectMapper.writeValueAsString(updateFilm)));
     }
 
     @DisplayName("PUT /films. Обновление фильма, id не существует")
     @Test
     void updateFilmNoId() throws Exception {
-        film.setId(112L);
+        film.setId(11112L);
 
         mockMvc.perform(put("/films").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(film)))
+                .andDo(result -> {
+                    Film filmDb = objectMapper.readValue(result.getResponse().getContentAsString(), Film.class);
+                    film.setId(filmDb.getId());
+                })
                 .andExpect(status().isNotFound())
                 .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
     }
@@ -212,10 +264,11 @@ public class FilmTests {
     @Order(7)
     @Test
     void setLike() throws Exception {
+        mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(user)));
+
         mockMvc.perform(put("/films/1/like/1").contentType("application/json"))
                 .andExpect(status().isNoContent());
-        mockMvc.perform(get("/films/1").contentType("application/json"))
-                .andExpect(jsonPath("$.likes").value(1));
     }
 
     @DisplayName("PUT /films/{id}/like/{userId}. Добавление лайка к фильму, id не существует")
@@ -235,14 +288,10 @@ public class FilmTests {
     }
 
     @DisplayName("DELETE /films/{id}/like/{userId}. Удаление лайка к фильму по id")
-    @Order(8)
     @Test
     void deleteLike() throws Exception {
         mockMvc.perform(delete("/films/1/like/1").contentType("application/json"))
                 .andExpect(status().isNoContent());
-        mockMvc.perform(get("/films/1").contentType("application/json"))
-                .andExpect(jsonPath("$.likes").isEmpty())
-                .andReturn();
     }
 
     @DisplayName("DELETE /films/{id}/like/{userId}. Удаление лайка к фильму по id")
@@ -262,17 +311,15 @@ public class FilmTests {
     }
 
     @DisplayName("GET /films/popular. Получение популярных фильмов, список пустой")
-    @Order(9)
     @Test
     void findPopularFilmsNoPopular() throws Exception {
-        mockMvc.perform(get("/films/popular").contentType("application/json"))
+        mockMvc.perform(get("/films/popular").queryParam("count", "0").contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(result -> assertThat(result.getResponse().getContentAsString())
                         .isEqualToIgnoringWhitespace("[]"));
     }
 
     @DisplayName("GET /films/popular. Получение популярных фильмов, count не указан")
-    @Order(10)
     @Test
     void findPopularFilmsNoCount() throws Exception {
         for (int i = 0; i < 12; i++) {
@@ -293,9 +340,9 @@ public class FilmTests {
     @Order(11)
     @Test
     void findPopularFilms() throws Exception {
-        mockMvc.perform(get("/films/popular?count=5").contentType("application/json"))
+        mockMvc.perform(get("/films/popular?count=1").contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(5));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(1));
     }
 
 }

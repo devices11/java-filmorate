@@ -2,28 +2,23 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    private final UserStorage userStorage;
+    private final UserDbStorage userStorage;
 
     public User findById(Long id) {
-        Optional<User> user = userStorage.findById(id);
-        if (user.isEmpty()) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-        return user.get();
+        return userStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
     }
 
     public Collection<User> findAll() {
@@ -61,62 +56,66 @@ public class UserService {
     }
 
     public Collection<User> getFriends(Long id) {
-        User userFromStorage = findById(id);
-        if (userFromStorage.getFriends() == null) {
-            return new HashSet<>();
-        }
-        return userFromStorage.getFriends().stream()
-                .map(userStorage::findById)
-                .flatMap(Optional::stream)
-                .collect(Collectors.toList());
+        validateUserExistence(id);
+        return userStorage.getFriend(id);
     }
 
-    public User addFriend(Long userId, Long friendId) {
-        User userFromStorage = findById(userId);
-        User friendFromStorage = findById(friendId);
-        if (userId.equals(friendId)) {
-            throw new ValidationException("Нельзя добавить в друзья самого себя");
+    public void addFriend(Long userId, Long friendId) {
+        validateFriendship(userId, friendId);
+
+        boolean isRequestPending = getFriendForUser(friendId, userId)
+                .filter(friend -> !friend.getConfirmed())
+                .isPresent();
+
+        if (isRequestPending) {
+            userStorage.updateFriend(true, friendId, userId);
         }
-        updateFriends(userFromStorage, friendId);
-        updateFriends(friendFromStorage, userId);
-        return userFromStorage;
+
+        userStorage.addFriend(isRequestPending, userId, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
-        User userFromStorage = findById(userId);
-        User friendFromStorage = findById(friendId);
-        deleteFriends(userFromStorage, friendId);
-        deleteFriends(friendFromStorage, userId);
+        validateUserExistence(userId, friendId);
+        if (getFriendForUser(userId, friendId).isPresent()) {
+            userStorage.deleteFriend(userId, friendId);
+        }
     }
 
     public Collection<User> commonFriends(Long id, Long otherId) {
-        User userFirstFromStorage = findById(id);
-        User userNextFromStorage = findById(otherId);
+        validateUserExistence(id, otherId);
         if (id.equals(otherId)) {
             throw new ValidationException("Пользователи должны отличаться");
         }
-        Set<Long> result = new HashSet<>(userFirstFromStorage.getFriends());
-        result.retainAll(userNextFromStorage.getFriends());
-        return result.stream()
-                .map(userStorage::findById)
-                .flatMap(Optional::stream)
-                .collect(Collectors.toList());
+        return getFriends(id).stream()
+                .filter(user -> getFriends(otherId).contains(user))
+                .collect(Collectors.toSet());
     }
 
-    private void updateFriends(User user, Long friendId) {
-        Set<Long> friends = new HashSet<>();
-        if (user.getFriends() != null) {
-            friends = user.getFriends();
+    private Optional<User> getFriendForUser(Long userId, Long friendId) {
+        return getFriends(userId).stream()
+                .filter(user -> user.getId().equals(friendId))
+                .findFirst();
+    }
+
+    private void validateUserExistence(Long... userIds) {
+        for (Long userId : userIds) {
+            findById(userId);
         }
-        friends.add(friendId);
-        user.setFriends(friends);
     }
 
-    private void deleteFriends(User user, Long friendId) {
-        Set<Long> friends;
-        if (user.getFriends() != null) {
-            friends = user.getFriends();
-            friends.remove(friendId);
+    private void validateFriendship(Long userId, Long friendId) {
+        validateUserExistence(userId, friendId);
+
+        if (userId.equals(friendId)) {
+            throw new ValidationException("Нельзя добавить в друзья самого себя");
+        }
+
+        Optional<User> friendUser1 = getFriendForUser(userId, friendId);
+        if (friendUser1.isPresent()) {
+            if (friendUser1.get().getConfirmed())
+                throw new ValidationException("Пользователь уже добавлен в друзья");
+            else
+                throw new ValidationException("Пользователю уже направлена заявка в друзья");
         }
     }
 

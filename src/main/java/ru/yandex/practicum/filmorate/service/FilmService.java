@@ -2,38 +2,50 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.*;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class FilmService {
-    private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
+    private final FilmDbStorage filmStorage;
+    private final UserDbStorage userStorage;
+    private final GenreDbStorage genreStorage;
+    private final MpaDbStorage mpaStorage;
 
     public Film findById(Long id) {
-        Optional<Film> filmFromStorage = filmStorage.findById(id);
-        if (filmFromStorage.isEmpty())
-            throw new NotFoundException("Фильм с указанным id не найден, id=" + id);
-        return filmFromStorage.get();
+        return filmStorage.findById(id)
+                .map(this::setGenres)
+                .orElseThrow(() -> new NotFoundException("Фильм с указанным id не найден, id=" + id));
     }
 
     public Collection<Film> findAll() {
-        return filmStorage.findAll();
+        return filmStorage.findAll().stream()
+                .map(this::setGenres)
+                .collect(Collectors.toList());
     }
 
     public Film add(Film film) {
-        return filmStorage.add(film);
+        validateFilm(film);
+        Film filmDb = filmStorage.add(film);
+        filmDb.setMpa(mpaStorage.findById(filmDb.getMpa().getId()).get());
+        filmDb.setGenres(genreStorage.findAllByFilmId(filmDb.getId()));
+        return filmDb;
     }
 
     public Film update(Film film) {
         Film updatedFilm = findById(film.getId());
+        validateFilm(film);
         if (film.getName() != null) {
             if (film.getName().isBlank())
                 throw new ValidationException("Название фильма не может быть пустым");
@@ -46,44 +58,67 @@ public class FilmService {
         }
         if (film.getDuration() != null)
             updatedFilm.setDuration(film.getDuration());
-        return filmStorage.update(updatedFilm);
+        if (film.getMpa() != null) {
+            updatedFilm.setMpa(film.getMpa());
+        }
+        if (film.getGenres() != null) {
+            updatedFilm.setGenres(film.getGenres());
+        }
+        Film filmDb = filmStorage.update(updatedFilm);
+        filmDb.setMpa(mpaStorage.findById(filmDb.getMpa().getId()).get());
+        filmDb.setGenres(genreStorage.findAllByFilmId(filmDb.getId()));
+        return filmDb;
     }
 
-    public void setLike(Long id, Long userId) {
-        Film filmFromStorage = findById(id);
-        if (userStorage.findById(userId).isEmpty()) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-        Set<Long> likes = new HashSet<>();
-        if (filmFromStorage.getLikes() != null) {
-            likes = filmFromStorage.getLikes();
-        }
-        likes.add(userId);
-        filmFromStorage.setLikes(likes);
+    public void setLike(Long filmId, Long userId) {
+        findById(filmId);
+        checkUser(userId);
+        filmStorage.addLike(filmId, userId);
     }
 
-    public void deleteLike(Long id, Long userId) {
-        Film filmFromStorage = findById(id);
-        if (userStorage.findById(userId).isEmpty()) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-        Set<Long> likes = new HashSet<>();
-        if (filmFromStorage.getLikes() != null) {
-            likes.remove(userId);
-        }
-        filmFromStorage.setLikes(likes);
+    public void deleteLike(Long filmId, Long userId) {
+        findById(filmId);
+        checkUser(userId);
+        filmStorage.deleteLike(filmId, userId);
     }
 
-    public Collection<Film> findPopular(Long count) {
-        return filmStorage.findAll().stream()
-                .filter(film -> film.getLikes() != null && film.getLikes().size() > 0)
-                .sorted((new Comparator<Film>() {
-                    public int compare(Film film1, Film film2) {
-                        return film1.getLikes().size() - film2.getLikes().size();
-                    }
-                }).reversed())
-                .limit(count)
+    public Collection<Film> findPopular(Integer count) {
+        return filmStorage.findPopular(count).stream()
+                .map(id -> filmStorage.findById(id).get())
+                .map(this::setGenres)
                 .collect(Collectors.toList());
+    }
+
+    private void checkUser(Long userId) {
+        if (userStorage.findById(userId).isEmpty()) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+    }
+
+    private void validateFilm(Film film) {
+        validateMpa(film.getMpa());
+        validateGenres(film.getGenres());
+    }
+
+    private void validateMpa(Mpa mpa) {
+        if (mpa != null && mpaStorage.findById(mpa.getId()).isEmpty()) {
+            throw new ValidationException("Возрастной рейтинг с указанным id не найден");
+        }
+    }
+
+    private void validateGenres(Collection<Genre> genres) {
+        if (genres != null) {
+            genres.forEach(genre -> {
+                if (genreStorage.findById(genre.getId()).isEmpty()) {
+                    throw new ValidationException("Жанр с указанным id не найден");
+                }
+            });
+        }
+    }
+
+    private Film setGenres(Film film) {
+        film.setGenres(genreStorage.findAllByFilmId(film.getId()));
+        return film;
     }
 
 }
