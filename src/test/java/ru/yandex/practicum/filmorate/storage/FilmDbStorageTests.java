@@ -134,7 +134,7 @@ public class FilmDbStorageTests {
     public void findPopular() {
         Film filmFromDB = filmDbStorage.add(film);
         filmDbStorage.addLike(filmFromDB.getId(), user.getId());
-        List<Integer> populars2 = filmDbStorage.findPopular(1);
+        Collection<Film> populars2 = filmDbStorage.findPopular(1);
 
         assertThat(populars2.size()).isEqualTo(1);
 

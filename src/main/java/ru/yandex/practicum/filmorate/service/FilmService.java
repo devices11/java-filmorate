@@ -87,10 +87,11 @@ public class FilmService {
     }
 
     public Collection<Film> findPopular(Integer count) {
-        return filmStorage.findPopular(count).stream()
-                .map(id -> filmStorage.findById(id).get())
-                .map(this::setGenres)
-                .collect(Collectors.toList());
+        Collection<Film> films = filmStorage.findPopular(count);
+        Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
+        films.forEach(film -> film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of())));
+
+        return films;
     }
 
     private void checkUser(Long userId) {

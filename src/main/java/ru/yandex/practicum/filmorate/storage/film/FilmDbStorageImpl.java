@@ -49,10 +49,16 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
             SELECT COUNT(*) FROM FILMORATE.likes WHERE film_id = ? and user_id = ?
             """;
     private static final String FIND_POPULAR_FILM_QUERY = """
-             SELECT l.FILM_ID FROM FILMORATE.likes l
-             GROUP BY l.FILM_ID
-             ORDER BY COUNT(l.FILM_ID) DESC
-             LIMIT ?
+            SELECT f.*, m."name" AS mpa_name
+            FROM filmorate.films f
+            JOIN filmorate.MPA m ON f.MPA_ID = m.id
+            LEFT JOIN (
+                SELECT l.FILM_ID, COUNT(l.FILM_ID) AS like_count
+                FROM filmorate.likes l
+                GROUP BY l.FILM_ID
+            ) likes ON f.film_id = likes.FILM_ID
+            ORDER BY like_count DESC
+            LIMIT ?;
             """;
     private static final String INSERT_FILM_LIKE_QUERY = """
             INSERT INTO filmorate.likes (film_id, user_id)
@@ -106,8 +112,8 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     }
 
     @Override
-    public List<Integer> findPopular(Integer count) {
-        return jdbc.queryForList(FIND_POPULAR_FILM_QUERY, Integer.class, count);
+    public Collection<Film> findPopular(Integer count) {
+        return findMany(filmRowMapper, FIND_POPULAR_FILM_QUERY, count);
     }
 
     @Override
