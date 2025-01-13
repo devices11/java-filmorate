@@ -17,34 +17,34 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
     private final FriendRowMapper friendRowMapper;
 
     private static final String FIND_BY_ID_QUERY = """
-            SELECT * FROM filmorate."user" WHERE user_id = ?
+            SELECT * FROM filmorate.users WHERE user_id = ?
             """;
     private static final String FIND_ALL_QUERY = """
-            SELECT * FROM filmorate."user"
+            SELECT * FROM filmorate.users
             """;
     private static final String INSERT_QUERY = """
-            INSERT INTO filmorate."user"(login, name, email, birthday)
+            INSERT INTO filmorate.users(login, name, email, birthday)
             VALUES (?, ?, ?, ?)
             """;
     private static final String UPDATE_QUERY = """
-            UPDATE filmorate."user"
+            UPDATE filmorate.users
             SET login = ?, name = ?, email = ?, birthday = ? WHERE user_id = ?
             """;
     private static final String INSERT_FRIEND_QUERY = """
-            INSERT INTO filmorate.friend (confirmed, user_id, friend_id)
+            INSERT INTO filmorate.friends (confirmed, user_id, friend_id)
             VALUES(?, ?, ?)
             """;
     private static final String FIND_ALL_FRIENDS_QUERY = """
-            SELECT u.*, f.CONFIRMED FROM FILMORATE."user" u
-            JOIN FILMORATE.FRIEND f ON u.USER_ID = f.FRIEND_ID
+            SELECT u.*, f.CONFIRMED FROM FILMORATE.users u
+            JOIN FILMORATE.FRIENDS f ON u.USER_ID = f.FRIEND_ID
             WHERE f.USER_ID = ?
             """;
     private static final String UPDATE_FRIENDS_QUERY = """
-            UPDATE FILMORATE.FRIEND SET CONFIRMED = ?
+            UPDATE FILMORATE.FRIENDS SET CONFIRMED = ?
             WHERE USER_ID = ? AND FRIEND_ID = ?
             """;
     private static final String DELETE_FRIEND_QUERY = """
-            DELETE FROM FILMORATE.FRIEND WHERE USER_ID = ? AND FRIEND_ID = ?
+            DELETE FROM FILMORATE.FRIENDS WHERE USER_ID = ? AND FRIEND_ID = ?
             """;
 
     public UserDbStorageImpl(JdbcTemplate jdbc, UserRowMapper userRowMapper, FriendRowMapper friendRowMapper) {
@@ -99,7 +99,7 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
         update(DELETE_FRIEND_QUERY, userId, friendId);
     }
 
-    public List<User> getFriend(long userId) {
+    public List<User> getFriends(long userId) {
         return findMany(friendRowMapper, FIND_ALL_FRIENDS_QUERY, userId);
     }
 

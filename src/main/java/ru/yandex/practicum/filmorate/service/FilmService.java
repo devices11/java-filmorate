@@ -12,7 +12,10 @@ import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,9 +33,11 @@ public class FilmService {
     }
 
     public Collection<Film> findAll() {
-        return filmStorage.findAll().stream()
-                .map(this::setGenres)
-                .collect(Collectors.toList());
+        Collection<Film> films = filmStorage.findAll();
+        Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
+        films.forEach(film -> film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of())));
+
+        return films;
     }
 
     public Film add(Film film) {

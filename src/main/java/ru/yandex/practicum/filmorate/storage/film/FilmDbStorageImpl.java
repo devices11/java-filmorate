@@ -16,25 +16,25 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
 
     private static final String FIND_ALL_QUERY = """
             SELECT f.*, m."name" AS mpa_name
-            FROM filmorate.film f
+            FROM filmorate.films f
             JOIN filmorate.MPA m ON f.MPA_ID = m.id
             """;
     private static final String FIND_BY_ID_QUERY = """
             SELECT f.*, m."name" AS mpa_name
-            FROM filmorate.film f
+            FROM filmorate.films f
             JOIN filmorate.MPA m ON f.MPA_ID = m.id
             WHERE f.film_id = ?
             """;
     private static final String INSERT_FILM_QUERY = """
-            INSERT INTO filmorate.film ("name", description, release_date, duration, mpa_id)
+            INSERT INTO filmorate.films ("name", description, release_date, duration, mpa_id)
             VALUES(?, ?, ?, ?, ?)
             """;
     private static final String INSERT_FILM_GENRE_QUERY = """
-            INSERT INTO filmorate.film_genre (genre_id, film_id)
+            INSERT INTO filmorate.film_genres (genre_id, film_id)
             VALUES(?, ?)
             """;
     private static final String UPDATE_FILM_QUERY = """
-            UPDATE filmorate.film
+            UPDATE filmorate.films
             SET "name" = ?,
                 description = ?,
                 release_date = ?,
@@ -43,23 +43,23 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
             WHERE film_id = ?
             """;
     private static final String DELETE_FILM_GENRE_QUERY = """
-            DELETE FROM filmorate.film_genre WHERE film_id = ?
+            DELETE FROM filmorate.film_genres WHERE film_id = ?
             """;
     private static final String FIND_LIKE_BY_FILM_ID_QUERY = """
-            SELECT COUNT(*) FROM FILMORATE."like" WHERE film_id = ? and user_id = ?
+            SELECT COUNT(*) FROM FILMORATE.likes WHERE film_id = ? and user_id = ?
             """;
     private static final String FIND_POPULAR_FILM_QUERY = """
-             SELECT l.FILM_ID FROM FILMORATE."like" l
+             SELECT l.FILM_ID FROM FILMORATE.likes l
              GROUP BY l.FILM_ID
              ORDER BY COUNT(l.FILM_ID) DESC
              LIMIT ?
             """;
     private static final String INSERT_FILM_LIKE_QUERY = """
-            INSERT INTO filmorate."like" (film_id, user_id)
+            INSERT INTO filmorate.likes (film_id, user_id)
             VALUES(?, ?)
             """;
     private static final String DELETE_LIKE_BY_FILM_ID_QUERY = """
-            DELETE FROM filmorate."like" WHERE film_id = ? and user_id = ?
+            DELETE FROM filmorate.likes WHERE film_id = ? and user_id = ?
             """;
 
     public FilmDbStorageImpl(JdbcTemplate jdbc, FilmRowMapper filmRowMapper) {
@@ -119,7 +119,7 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
 
     @Override
     public void deleteLike(long filmId, long userId) {
-       delete(DELETE_LIKE_BY_FILM_ID_QUERY, filmId, userId);
+        delete(DELETE_LIKE_BY_FILM_ID_QUERY, filmId, userId);
     }
 
     private Integer getMpaId(Film film) {
@@ -129,9 +129,13 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     private void updateGenres(Film film) {
         if (film.getGenres() != null) {
             delete(DELETE_FILM_GENRE_QUERY, film.getId());
-            film.getGenres().stream()
+
+            List<Object[]> batchArgs = film.getGenres().stream()
                     .distinct()
-                    .forEach(genre -> update(INSERT_FILM_GENRE_QUERY, genre.getId(), film.getId()));
+                    .map(genre -> new Object[]{genre.getId(), film.getId()})
+                    .toList();
+
+            jdbc.batchUpdate(INSERT_FILM_GENRE_QUERY, batchArgs);
         }
     }
 

@@ -101,7 +101,7 @@ public class UserDbStorageTests {
 
         userDbStorage.addFriend(false, user1.getId(), user2.getId());
 
-        List<User> userFriends = userDbStorage.getFriend(user1.getId());
+        List<User> userFriends = userDbStorage.getFriends(user1.getId());
         assertThat(userFriends.stream()
                 .findFirst()
                 .get()
@@ -118,7 +118,7 @@ public class UserDbStorageTests {
         userDbStorage.addFriend(false, user1.getId(), user2.getId());
         userDbStorage.updateFriend(true, user1.getId(), user2.getId());
 
-        List<User> userFriends = userDbStorage.getFriend(user1.getId());
+        List<User> userFriends = userDbStorage.getFriends(user1.getId());
         assertThat(userFriends.stream()
                 .findFirst()
                 .get()
@@ -135,7 +135,7 @@ public class UserDbStorageTests {
         userDbStorage.addFriend(false, user1.getId(), user2.getId());
         userDbStorage.deleteFriend(user1.getId(), user2.getId());
 
-        List<User> userFriends = userDbStorage.getFriend(user1.getId());
+        List<User> userFriends = userDbStorage.getFriends(user1.getId());
         assertThat(userFriends).isEmpty();
     }
 }

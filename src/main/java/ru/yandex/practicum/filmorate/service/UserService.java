@@ -8,8 +8,9 @@ import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -57,7 +58,7 @@ public class UserService {
 
     public Collection<User> getFriends(Long id) {
         validateUserExistence(id);
-        return userStorage.getFriend(id);
+        return userStorage.getFriends(id);
     }
 
     public void addFriend(Long userId, Long friendId) {
@@ -86,9 +87,12 @@ public class UserService {
         if (id.equals(otherId)) {
             throw new ValidationException("Пользователи должны отличаться");
         }
-        return getFriends(id).stream()
-                .filter(user -> getFriends(otherId).contains(user))
-                .collect(Collectors.toSet());
+
+        Set<User> friendsUser = new HashSet<>(getFriends(id));
+        Set<User> friendsOtherUser = new HashSet<>(getFriends(otherId));
+        friendsUser.retainAll(friendsOtherUser);
+
+        return friendsUser;
     }
 
     private Optional<User> getFriendForUser(Long userId, Long friendId) {
@@ -110,9 +114,9 @@ public class UserService {
             throw new ValidationException("Нельзя добавить в друзья самого себя");
         }
 
-        Optional<User> friendUser1 = getFriendForUser(userId, friendId);
-        if (friendUser1.isPresent()) {
-            if (friendUser1.get().getConfirmed())
+        Optional<User> friendUser = getFriendForUser(userId, friendId);
+        if (friendUser.isPresent()) {
+            if (friendUser.get().getConfirmed())
                 throw new ValidationException("Пользователь уже добавлен в друзья");
             else
                 throw new ValidationException("Пользователю уже направлена заявка в друзья");
