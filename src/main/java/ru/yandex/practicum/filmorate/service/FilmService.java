@@ -15,7 +15,6 @@ import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
