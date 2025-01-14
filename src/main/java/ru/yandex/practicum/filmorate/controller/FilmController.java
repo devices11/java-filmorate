@@ -53,8 +53,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> findPopular(@RequestParam(name = "count",
-            required = false, defaultValue = "10") Long count) {
+    public Collection<Film> findPopular(@RequestParam(name = "count", defaultValue = "10") Integer count) {
         return filmService.findPopular(count);
     }
 }
