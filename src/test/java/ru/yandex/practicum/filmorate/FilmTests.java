@@ -8,7 +8,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -22,6 +21,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureDataJdbc
@@ -39,7 +39,7 @@ public class FilmTests {
     private ObjectMapper objectMapper;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         Mpa mpa = Mpa.builder()
                 .id(1)
                 .name("G")
@@ -85,7 +85,7 @@ public class FilmTests {
     void getAllFilms() throws Exception {
         mockMvc.perform(get("/films").contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").exists());
+                .andExpect(jsonPath("$.length()").exists());
     }
 
     @DisplayName("POST /films. Параметры с null")
@@ -302,6 +302,46 @@ public class FilmTests {
                 .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
     }
 
+    @DisplayName("DELETE /films/{id}. Удаление фильма по id")
+    @Order(7)
+    @Test
+    void deleteFilm() throws Exception {
+        Mpa mpa = Mpa.builder()
+                .id(3)
+                .name("PG")
+                .build();
+        Genre genre = Genre.builder()
+                .id(3)
+                .name("Драма")
+                .build();
+        Film deleteFilm = Film.builder()
+                .name("TestName")
+                .description("Test description")
+                .releaseDate(LocalDate.parse("2011-08-20"))
+                .duration(188)
+                .mpa(mpa)
+                .genres(List.of(genre))
+                .build();
+        mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(film)))
+                .andDo(result -> {
+                    Film filmDb = objectMapper.readValue(result.getResponse().getContentAsString(), Film.class);
+                    deleteFilm.setId(filmDb.getId());
+                });
+
+        mockMvc.perform(delete("/films/" + deleteFilm.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @DisplayName("DELETE /films/{id}. Удаление фильма по id, фильм не найден")
+    @Test
+    void deleteFilmIdNotFound() throws Exception {
+        mockMvc.perform(delete("/films/222").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
+    }
+
     @DisplayName("DELETE /films/{id}/like/{userId}. Удаление лайка к фильму, id пользователя не существует")
     @Test
     void deleteLikeNoIdUser() throws Exception {
@@ -333,7 +373,7 @@ public class FilmTests {
 
         mockMvc.perform(get("/films/popular").contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(10));
+                .andExpect(jsonPath("$.length()").value(10));
     }
 
     @DisplayName("GET /films/popular. Получение популярных фильмов, count указан")
@@ -342,7 +382,7 @@ public class FilmTests {
     void findPopularFilms() throws Exception {
         mockMvc.perform(get("/films/popular?count=1").contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.length()").value(1));
     }
 
 }

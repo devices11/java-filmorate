@@ -15,4 +15,6 @@ public interface GenreDbStorage {
     Collection<Genre> findAllByFilmId(long id);
 
     Map<Long, List<Genre>> findAllByFilms();
+
+    void deleteConnectionByFilmId(long id);
 }

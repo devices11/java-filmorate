@@ -22,5 +22,9 @@ public interface UserDbStorage {
 
     void deleteFriend(long userId, long friendId);
 
+    void deleteAllFriendshipConnections(long userId);
+
     List<User> getFriends(long userId);
+
+    void delete(long id);
 }

@@ -38,6 +38,12 @@ public class UserController {
         return userService.update(user);
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable long id) {
+        userService.delete(id);
+    }
+
     @GetMapping("/{id}/friends")
     public Collection<User> getFriends(@PathVariable long id) {
         return userService.getFriends(id);
