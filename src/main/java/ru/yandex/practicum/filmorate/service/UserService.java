@@ -3,19 +3,18 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserDbStorage userStorage;
+    private final FilmDbStorage filmStorage;
 
     public User findById(Long id) {
         return userStorage.findById(id)
@@ -123,4 +122,10 @@ public class UserService {
         }
     }
 
+    public void delete(long id) {
+        validateUserExistence(id);
+        userStorage.deleteAllFriendshipConnections(id);
+        filmStorage.deleteAllLikeByUserId(id);
+        userStorage.delete(id);
+    }
 }
