@@ -130,6 +130,5 @@ public class FilmService {
                 .map(this::setGenres)
                 .orElseThrow(() -> new NotFoundException("Фильм с указанным id не найден, id=" + id));
         filmStorage.delete(film.getId());
-
     }
 }
