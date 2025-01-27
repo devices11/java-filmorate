@@ -56,4 +56,7 @@ public class FilmController {
     public Collection<Film> findPopular(@RequestParam(name = "count", defaultValue = "10") Integer count) {
         return filmService.findPopular(count);
     }
+
+    // Тут будет ендпоинт для удаления
+
 }
