@@ -46,6 +46,9 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
     private static final String DELETE_FRIEND_QUERY = """
             DELETE FROM FILMORATE.FRIENDS WHERE USER_ID = ? AND FRIEND_ID = ?
             """;
+    private static final String DELETE_QUERY = """
+            DELETE FROM FILMORATE.users WHERE USER_ID = ?
+            """;
 
     public UserDbStorageImpl(JdbcTemplate jdbc, UserRowMapper userRowMapper, FriendRowMapper friendRowMapper) {
         super(jdbc);
@@ -101,6 +104,11 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
 
     public List<User> getFriends(long userId) {
         return findMany(friendRowMapper, FIND_ALL_FRIENDS_QUERY, userId);
+    }
+
+    @Override
+    public void delete(long id) {
+        delete(DELETE_QUERY, id);
     }
 
 }

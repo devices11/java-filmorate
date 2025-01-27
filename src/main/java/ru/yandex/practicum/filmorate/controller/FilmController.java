@@ -57,6 +57,10 @@ public class FilmController {
         return filmService.findPopular(count);
     }
 
-    // Тут будет ендпоинт для удаления
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable long id) {
+        filmService.delete(id);
+    }
 
 }

@@ -42,6 +42,9 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
                 mpa_id = ?
             WHERE film_id = ?
             """;
+    private static final String DELETE_FILM_QUERY = """
+            DELETE FROM filmorate.films WHERE film_id = ?
+            """;
     private static final String DELETE_FILM_GENRE_QUERY = """
             DELETE FROM filmorate.film_genres WHERE film_id = ?
             """;
@@ -126,6 +129,11 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     @Override
     public void deleteLike(long filmId, long userId) {
         delete(DELETE_LIKE_BY_FILM_ID_QUERY, filmId, userId);
+    }
+
+    @Override
+    public void delete(long id) {
+        delete(DELETE_FILM_QUERY, id);
     }
 
     private Integer getMpaId(Film film) {

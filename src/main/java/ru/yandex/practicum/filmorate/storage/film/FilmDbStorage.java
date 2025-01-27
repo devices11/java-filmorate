@@ -20,4 +20,6 @@ public interface FilmDbStorage {
     void addLike(long filmId, long userId);
 
     void deleteLike(long filmId, long userId);
+
+    void delete(long id);
 }

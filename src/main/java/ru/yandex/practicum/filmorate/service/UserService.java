@@ -123,4 +123,8 @@ public class UserService {
         }
     }
 
+    public void delete(long id) {
+        validateUserExistence(id);
+        userStorage.delete(id);
+    }
 }
