@@ -106,7 +106,7 @@ public class FilmService {
 
     private void validateMpa(Mpa mpa) {
         if (mpa != null && mpaStorage.findById(mpa.getId()).isEmpty()) {
-            throw new ValidationException("Возрастной рейтинг с указанным id не найден");
+            throw new NotFoundException("Возрастной рейтинг с указанным id не найден");
         }
     }
 
@@ -114,7 +114,7 @@ public class FilmService {
         if (genres != null) {
             genres.forEach(genre -> {
                 if (genreStorage.findById(genre.getId()).isEmpty()) {
-                    throw new ValidationException("Жанр с указанным id не найден");
+                    throw new NotFoundException("Жанр с указанным id не найден");
                 }
             });
         }

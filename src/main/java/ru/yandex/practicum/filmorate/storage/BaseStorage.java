@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import ru.yandex.practicum.filmorate.util.exception.InternalServerException;
@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 public class BaseStorage<T> {
-    protected final JdbcTemplate jdbc;
+    protected final JdbcOperations jdbc;
 
     protected Optional<T> findOne(RowMapper<T> mapper, String query, Object... params) {
         try {
