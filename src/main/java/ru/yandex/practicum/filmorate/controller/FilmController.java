@@ -56,4 +56,11 @@ public class FilmController {
     public Collection<Film> findPopular(@RequestParam(name = "count", defaultValue = "10") Integer count) {
         return filmService.findPopular(count);
     }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable long id) {
+        filmService.delete(id);
+    }
+
 }

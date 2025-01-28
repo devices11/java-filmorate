@@ -280,6 +280,31 @@ public class UserTests {
                 .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
     }
 
+    @DisplayName("DELETE /users/{id}. Удаление пользователя по id")
+    @Test
+    void deleteUser() throws Exception {
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andDo(result -> {
+                    User userDb = objectMapper.readValue(result.getResponse().getContentAsString(), User.class);
+                    user.setId(userDb.getId());
+                })
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(delete("/users/" + user.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @DisplayName("DELETE /users/{id}. Удаление пользователя по id, id не найден")
+    @Test
+    void deleteUserIdNotFound() throws Exception {
+        mockMvc.perform(delete("/users/1234").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
+    }
+
     @DisplayName("GET /users/{id}/friends/common/{otherId}. Получение общего списка друзей")
     @Order(10)
     @Test

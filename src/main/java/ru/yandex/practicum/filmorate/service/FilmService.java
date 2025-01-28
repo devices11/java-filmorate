@@ -125,4 +125,10 @@ public class FilmService {
         return film;
     }
 
+    public void delete(long id) {
+        findById(id);
+        filmStorage.deleteAllLikeByFilmId(id);
+        genreStorage.deleteConnectionByFilmId(id);
+        filmStorage.delete(id);
+    }
 }
