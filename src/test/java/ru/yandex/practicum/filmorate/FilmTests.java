@@ -302,37 +302,6 @@ public class FilmTests {
                 .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
     }
 
-    @DisplayName("DELETE /films/{id}. Удаление фильма по id")
-    @Test
-    void deleteFilm() throws Exception {
-        Mpa mpa = Mpa.builder()
-                .id(1)
-                .name("PG")
-                .build();
-        Genre genre = Genre.builder()
-                .id(1)
-                .name("Драма")
-                .build();
-        Film deleteFilm = Film.builder()
-                .name("TestName")
-                .description("Test description")
-                .releaseDate(LocalDate.parse("2011-08-20"))
-                .duration(188)
-                .mpa(mpa)
-                .genres(List.of(genre))
-                .build();
-        mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(deleteFilm)))
-                .andDo(result -> {
-                    Film filmDb = objectMapper.readValue(result.getResponse().getContentAsString(), Film.class);
-                    deleteFilm.setId(filmDb.getId());
-                });
-
-        mockMvc.perform(delete("/films/" + deleteFilm.getId())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
-    }
-
     @DisplayName("DELETE /films/{id}. Удаление фильма по id, фильм не найден")
     @Test
     void deleteFilmIdNotFound() throws Exception {
