@@ -22,4 +22,6 @@ public interface FilmDbStorage {
     void deleteLike(long filmId, long userId);
 
     void delete(long id);
+
+    void deleteAllLikeByFilmId(long filmId);
 }
