@@ -303,15 +303,14 @@ public class FilmTests {
     }
 
     @DisplayName("DELETE /films/{id}. Удаление фильма по id")
-    @Order(8)
     @Test
     void deleteFilm() throws Exception {
         Mpa mpa = Mpa.builder()
-                .id(3)
+                .id(1)
                 .name("PG")
                 .build();
         Genre genre = Genre.builder()
-                .id(3)
+                .id(1)
                 .name("Драма")
                 .build();
         Film deleteFilm = Film.builder()
@@ -323,7 +322,7 @@ public class FilmTests {
                 .genres(List.of(genre))
                 .build();
         mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(film)))
+                        .content(objectMapper.writeValueAsString(deleteFilm)))
                 .andDo(result -> {
                     Film filmDb = objectMapper.readValue(result.getResponse().getContentAsString(), Film.class);
                     deleteFilm.setId(filmDb.getId());
