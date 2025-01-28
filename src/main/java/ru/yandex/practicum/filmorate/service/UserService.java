@@ -128,5 +128,6 @@ public class UserService {
             userStorage.deleteFriend(x, id);
         });
         userStorage.delete(id);
+
     }
 }
