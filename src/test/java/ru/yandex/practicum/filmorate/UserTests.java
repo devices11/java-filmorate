@@ -280,6 +280,13 @@ public class UserTests {
                 .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
     }
 
+    @DisplayName("DELETE /users/{id}. Удаление пользователя")
+    @Test
+    void deleteUser() throws Exception {
+        mockMvc.perform(delete("/users/1").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
     @DisplayName("GET /users/{id}/friends/common/{otherId}. Получение общего списка друзей")
     @Order(10)
     @Test

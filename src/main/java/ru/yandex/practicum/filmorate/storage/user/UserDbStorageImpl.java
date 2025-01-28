@@ -46,6 +46,9 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
     private static final String DELETE_FRIEND_QUERY = """
             DELETE FROM FILMORATE.FRIENDS WHERE USER_ID = ? AND FRIEND_ID = ?
             """;
+    private static final String DELETE_ALL_FRIENDSHIP_CONNECTION_QUERY = """
+            DELETE FROM FILMORATE.FRIENDS WHERE USER_ID = ? OR FRIEND_ID = ?
+            """;
     private static final String DELETE_QUERY = """
             DELETE FROM FILMORATE.users WHERE USER_ID = ?
             """;
@@ -100,6 +103,11 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
 
     public void deleteFriend(long userId, long friendId) {
         update(DELETE_FRIEND_QUERY, userId, friendId);
+    }
+
+    @Override
+    public void deleteAllFriendshipConnections(long userId) {
+        delete(DELETE_ALL_FRIENDSHIP_CONNECTION_QUERY, userId, userId);
     }
 
     public List<User> getFriends(long userId) {

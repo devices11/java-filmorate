@@ -122,11 +122,7 @@ public class UserService {
 
     public void delete(long id) {
         validateUserExistence(id);
-        Collection<User> friends = getFriends(id);
-        friends.stream().map(User::getId).forEach(x -> {
-            userStorage.deleteFriend(id, x);
-            userStorage.deleteFriend(x, id);
-        });
+        userStorage.deleteAllFriendshipConnections(id);
         userStorage.delete(id);
 
     }
