@@ -39,7 +39,7 @@ public class FilmTests {
     private ObjectMapper objectMapper;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         Mpa mpa = Mpa.builder()
                 .id(1)
                 .name("G")
@@ -298,6 +298,21 @@ public class FilmTests {
     @Test
     void deleteLikeNoIdFilm() throws Exception {
         mockMvc.perform(delete("/films/11111/like/1").contentType("application/json"))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
+    }
+
+    @DisplayName("DELETE /films/{id}. Удаление фильма по id")
+    @Test
+    void deleteFilm() throws Exception {
+        mockMvc.perform(delete("/films/2").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @DisplayName("DELETE /films/{id}. Удаление фильма по id, фильм не найден")
+    @Test
+    void deleteFilmIdNotFound() throws Exception {
+        mockMvc.perform(delete("/films/222").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
     }

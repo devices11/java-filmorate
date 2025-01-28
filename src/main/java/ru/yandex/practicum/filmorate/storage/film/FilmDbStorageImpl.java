@@ -73,6 +73,9 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     private static final String DELETE_ALL_LIKE_BY_FILM_ID_QUERY = """
             DELETE FROM filmorate.likes WHERE film_id = ?
             """;
+    private static final String DELETE_ALL_LIKE_BY_USER_ID_QUERY = """
+            DELETE FROM filmorate.likes WHERE user_id = ?
+            """;
 
     public FilmDbStorageImpl(JdbcTemplate jdbc, FilmRowMapper filmRowMapper) {
         super(jdbc);
@@ -137,6 +140,11 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     @Override
     public void deleteAllLikeByFilmId(long filmId) {
         delete(DELETE_ALL_LIKE_BY_FILM_ID_QUERY, filmId);
+    }
+
+    @Override
+    public void deleteAllLikeByUserId(long id) {
+        delete(DELETE_ALL_LIKE_BY_USER_ID_QUERY, id);
     }
 
     @Override
