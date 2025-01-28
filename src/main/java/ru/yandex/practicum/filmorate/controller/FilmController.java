@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.util.validation.groups.Create;
 import ru.yandex.practicum.filmorate.util.validation.groups.Update;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -57,6 +58,12 @@ public class FilmController {
                                         @RequestParam(name = "genreId", required = false) Long genreId,
                                         @RequestParam(name = "year", required = false) Integer year) {
         return filmService.findPopular(count, genreId, year);
+    }
+
+    @GetMapping("/common")
+    public List<Film> findCommonFilms(@RequestParam(name = "userId") Long userId,
+                                      @RequestParam(name = "friendId") Long friendId){
+        return filmService.findFilmsByUserId(userId,friendId);
     }
 
     @DeleteMapping("/{id}")
