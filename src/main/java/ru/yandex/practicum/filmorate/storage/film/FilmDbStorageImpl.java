@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -60,6 +61,11 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
             ORDER BY like_count DESC
             LIMIT ?;
             """;
+    private static final String FIND_FILMS_BY_USER_ID_QUERY = """
+            SELECT l.FILM_ID
+            FROM filmorate.likes l
+            WHERE user_id = ?;
+            """;
     private static final String INSERT_FILM_LIKE_QUERY = """
             INSERT INTO filmorate.likes (film_id, user_id)
             VALUES(?, ?)
@@ -71,6 +77,11 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     public FilmDbStorageImpl(JdbcTemplate jdbc, FilmRowMapper filmRowMapper) {
         super(jdbc);
         this.filmRowMapper = filmRowMapper;
+    }
+
+    @Override
+    public List<Integer> findFilmsByUserId(long userId) {
+        return jdbc.queryForList(FIND_FILMS_BY_USER_ID_QUERY, Integer.class, userId);
     }
 
     @Override
