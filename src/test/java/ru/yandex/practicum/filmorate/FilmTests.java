@@ -303,7 +303,7 @@ public class FilmTests {
     }
 
     @DisplayName("DELETE /films/{id}. Удаление фильма по id")
-    @Order(7)
+    @Order(8)
     @Test
     void deleteFilm() throws Exception {
         Mpa mpa = Mpa.builder()
