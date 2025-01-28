@@ -124,6 +124,5 @@ public class UserService {
         validateUserExistence(id);
         userStorage.deleteAllFriendshipConnections(id);
         userStorage.delete(id);
-
     }
 }
