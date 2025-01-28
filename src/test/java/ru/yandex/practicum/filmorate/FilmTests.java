@@ -17,6 +17,7 @@ import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -382,6 +383,47 @@ public class FilmTests {
         mockMvc.perform(get("/films/popular?count=1").contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @DisplayName("GET /films/common. Получение общих фильмов, userId и friendId указаны")
+    @Test
+    void findCommonFilms() throws Exception {
+
+        Long userIdOne = null;
+        Long userIdTwo = null;
+        for (int i = 0; i < 4; i++) {
+            mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(film)));
+        }
+        for (int i = 0; i < 2; i++) {
+            mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(user))).andDo(result -> {
+                User userDb = objectMapper.readValue(result.getResponse().getContentAsString(), User.class);
+                user.setId(userDb.getId());
+            });
+            if (i == 0) {
+                userIdOne = user.getId();
+
+            }
+            if (i == 1) {
+                userIdTwo = user.getId();
+            }
+        }
+        assertThat(userIdOne).isNotNull();
+        assertThat(userIdTwo).isNotNull();
+
+        for (int i = 1; i < 5; i++) {
+            String path = "/films/" + i + "/like/" + userIdOne;
+            mockMvc.perform(put(path).contentType("application/json"));
+        }
+        for (int i = 1; i < 3; i++) {
+            String path = "/films/" + i + "/like/" + userIdTwo;
+            mockMvc.perform(put(path).contentType("application/json"));
+        }
+
+        mockMvc.perform(get("/films/common?userId=" + userIdOne + "&friendId=" + userIdTwo).contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(2));
     }
 
 }

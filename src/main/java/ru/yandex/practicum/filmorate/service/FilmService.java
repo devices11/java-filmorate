@@ -15,6 +15,8 @@ import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +25,18 @@ public class FilmService {
     private final UserDbStorage userStorage;
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
+
+    public List<Film> findFilmsByUserId(long userId, long friendId) {
+        List<Integer> filmsId = filmStorage.findFilmsByUserId(userId);
+        List<Integer> filmsFriend = filmStorage.findFilmsByUserId(friendId);
+        return filmsId.stream()
+                .filter(filmsFriend::contains)
+                .map(filmStorage::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(this::setGenres)
+                .toList();
+    }
 
     public Film findById(Long id) {
         return filmStorage.findById(id)
