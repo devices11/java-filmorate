@@ -262,7 +262,6 @@ public class FilmTests {
 
     @DisplayName("PUT /films/{id}/like/{userId}. Добавление лайка к фильму по id")
     @Order(7)
-    @Disabled
     @Test
     void setLike() throws Exception {
         mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON)
@@ -290,7 +289,6 @@ public class FilmTests {
 
     @DisplayName("DELETE /films/{id}/like/{userId}. Удаление лайка к фильму по id")
     @Test
-    @Disabled
     void deleteLike() throws Exception {
         mockMvc.perform(delete("/films/1/like/1").contentType("application/json"))
                 .andExpect(status().isNoContent());
@@ -302,6 +300,37 @@ public class FilmTests {
         mockMvc.perform(delete("/films/11111/like/1").contentType("application/json"))
                 .andExpect(status().isNotFound())
                 .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
+    }
+
+    @DisplayName("DELETE /films/{id}. Удаление фильма по id")
+    @Test
+    void deleteFilm() throws Exception {
+        Mpa mpa = Mpa.builder()
+                .id(1)
+                .name("PG")
+                .build();
+        Genre genre = Genre.builder()
+                .id(1)
+                .name("Драма")
+                .build();
+        Film deleteFilm = Film.builder()
+                .name("TestName")
+                .description("Test description")
+                .releaseDate(LocalDate.parse("2011-08-20"))
+                .duration(188)
+                .mpa(mpa)
+                .genres(List.of(genre))
+                .build();
+        mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(deleteFilm)))
+                .andDo(result -> {
+                    Film filmDb = objectMapper.readValue(result.getResponse().getContentAsString(), Film.class);
+                    deleteFilm.setId(filmDb.getId());
+                });
+
+        mockMvc.perform(delete("/films/" + deleteFilm.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
     }
 
     @DisplayName("DELETE /films/{id}. Удаление фильма по id, фильм не найден")
