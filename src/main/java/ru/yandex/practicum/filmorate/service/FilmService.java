@@ -126,9 +126,7 @@ public class FilmService {
     }
 
     public void delete(long id) {
-        filmStorage.findById(id)
-                .map(this::setGenres)
-                .orElseThrow(() -> new NotFoundException("Фильм с указанным id не найден, id=" + id));
+        findById(id);
         filmStorage.deleteAllLikeByFilmId(id);
         genreStorage.deleteConnectionByFilmId(id);
         filmStorage.delete(id);
