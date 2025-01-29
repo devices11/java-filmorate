@@ -12,10 +12,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,14 +24,27 @@ public class FilmService {
     private final MpaDbStorage mpaStorage;
 
     public List<Film> findFilmsByUserId(long userId, long friendId) {
-        List<Integer> filmsId = filmStorage.findFilmsByUserId(userId);
-        List<Integer> filmsFriend = filmStorage.findFilmsByUserId(friendId);
+        checkUser(userId);
+        checkUser(friendId);
+        List<Long> filmsId = filmStorage.findFilmsByUserId(userId);
+        List<Long> filmsFriend = filmStorage.findFilmsByUserId(friendId);
         return filmsId.stream()
                 .filter(filmsFriend::contains)
                 .map(filmStorage::findById)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .map(this::setGenres)
+                .sorted((o1, o2) -> {
+                    Long likesFilm1 = filmStorage.getCountLikesFilm(o1.getId());
+                    Long likesFilm2 = filmStorage.getCountLikesFilm(o2.getId());
+                    if (likesFilm1 - likesFilm2 > 0) {
+                        return 1;
+                    }
+                    if (likesFilm1 - likesFilm2 < 0) {
+                        return -1;
+                    }
+                    return 0;
+                })
                 .toList();
     }
 

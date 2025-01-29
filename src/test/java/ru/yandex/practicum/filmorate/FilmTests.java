@@ -415,13 +415,17 @@ public class FilmTests {
     @DisplayName("GET /films/common. Получение общих фильмов, userId и friendId указаны")
     @Test
     void findCommonFilms() throws Exception {
-
         Long userIdOne = null;
         Long userIdTwo = null;
+
         for (int i = 0; i < 4; i++) {
             mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(film)));
+                    .content(objectMapper.writeValueAsString(film))).andDo(result -> {
+                Film filmDB = objectMapper.readValue(result.getResponse().getContentAsString(), Film.class);
+                film.setId(filmDB.getId());
+            });
         }
+
         for (int i = 0; i < 2; i++) {
             mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(user))).andDo(result -> {
@@ -430,19 +434,17 @@ public class FilmTests {
             });
             if (i == 0) {
                 userIdOne = user.getId();
-
             }
             if (i == 1) {
                 userIdTwo = user.getId();
             }
         }
-        assertThat(userIdOne).isNotNull();
-        assertThat(userIdTwo).isNotNull();
 
         for (int i = 1; i < 5; i++) {
             String path = "/films/" + i + "/like/" + userIdOne;
             mockMvc.perform(put(path).contentType("application/json"));
         }
+
         for (int i = 1; i < 3; i++) {
             String path = "/films/" + i + "/like/" + userIdTwo;
             mockMvc.perform(put(path).contentType("application/json"));
@@ -453,4 +455,17 @@ public class FilmTests {
                 .andExpect(jsonPath("$.length()").value(2));
     }
 
+    @DisplayName("GET /films/common. Получение общих фильмов, params не указаны")
+    @Test
+    public void findCommonFilmsNoParams() throws Exception {
+        mockMvc.perform(get("/films/common").contentType("application/json"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @DisplayName("GET /films/common. Получение общих фильмов, пользователей не существует не существует")
+    @Test
+    public void findCommonFilmsNoUserId() throws Exception {
+        mockMvc.perform(get("/films/common?userId=99999&friendId=666666").contentType("application/json"))
+                .andExpect(status().isNotFound());
+    }
 }

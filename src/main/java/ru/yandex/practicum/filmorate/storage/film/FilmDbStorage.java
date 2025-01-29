@@ -8,7 +8,9 @@ import java.util.Optional;
 
 public interface FilmDbStorage {
 
-    List<Integer> findFilmsByUserId(long userId);
+    List<Long> findFilmsByUserId(long userId);
+
+    Long getCountLikesFilm(long filmId);
 
     Optional<Film> findById(long id);
 
