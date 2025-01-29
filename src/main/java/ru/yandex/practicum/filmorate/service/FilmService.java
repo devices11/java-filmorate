@@ -108,11 +108,10 @@ public class FilmService {
         filmStorage.deleteLike(filmId, userId);
     }
 
-    public Collection<Film> findPopular(Integer count) {
-        Collection<Film> films = filmStorage.findPopular(count);
+    public Collection<Film> findPopular(int count, Long genreId, Integer year) {
+        Collection<Film> films = filmStorage.findPopular(count, genreId, year);
         Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
         films.forEach(film -> film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of())));
-
         return films;
     }
 
