@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -49,6 +48,9 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     private static final String FIND_LIKE_BY_FILM_ID_QUERY = """
             SELECT COUNT(*) FROM FILMORATE.likes WHERE film_id = ? and user_id = ?
             """;
+    private static final String FIND_ALL_LIKE_BY_FILM_ID_QUERY = """
+            SELECT COUNT(*) FROM FILMORATE.likes WHERE film_id = ?
+            """;
     private static final String FIND_POPULAR_FILM_QUERY = """
             SELECT f.*, m."name" AS mpa_name
             FROM filmorate.films f
@@ -80,8 +82,13 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     }
 
     @Override
-    public List<Integer> findFilmsByUserId(long userId) {
-        return jdbc.queryForList(FIND_FILMS_BY_USER_ID_QUERY, Integer.class, userId);
+    public List<Long> findFilmsByUserId(long userId) {
+        return jdbc.queryForList(FIND_FILMS_BY_USER_ID_QUERY, Long.class, userId);
+    }
+
+    @Override
+    public Long getCountLikesFilm(long filmId) {
+        return jdbc.queryForObject(FIND_ALL_LIKE_BY_FILM_ID_QUERY, Long.class, filmId);
     }
 
     @Override
