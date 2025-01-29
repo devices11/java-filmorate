@@ -18,7 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureDataJdbc
-@ComponentScan({"ru.yandex.practicum.filmorate"})
 public class GenreDbStorageTests {
 
     @Autowired

@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureDataJdbc
-//@ComponentScan({"ru.yandex.practicum.filmorate.storage.film"})
 public class FilmDbStorageTests {
     private static Film film;
     private static User user;
