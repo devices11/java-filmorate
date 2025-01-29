@@ -424,7 +424,7 @@ public class FilmTests {
 
         mockMvc.perform(get("/films/common?userId=" + userIdOne + "&friendId=" + userIdTwo).contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.length()").value(2));
     }
 
     @DisplayName("GET /films/common. Получение общих фильмов, params не указаны")
