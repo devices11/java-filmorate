@@ -358,7 +358,7 @@ public class FilmTests {
                         .isEqualToIgnoringWhitespace("[]"));
     }
 
-    @DisplayName("GET /films/popular. Получение популярных фильмов, count не указан")
+    @DisplayName("GET /films/popular. Получение популярных фильмов, параметры не указаны")
     @Test
     void findPopularFilmsNoCount() throws Exception {
         for (int i = 0; i < 12; i++) {
@@ -375,13 +375,41 @@ public class FilmTests {
                 .andExpect(jsonPath("$.length()").value(10));
     }
 
-    @DisplayName("GET /films/popular. Получение популярных фильмов, count указан")
+    @DisplayName("GET /films/popular. Получение популярных фильмов, count указан, жанр и год не указаны")
     @Order(11)
     @Test
     void findPopularFilms() throws Exception {
         mockMvc.perform(get("/films/popular?count=1").contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @DisplayName("GET /films/popular. Получение популярных фильмов, не найдено фильмов по параметрам")
+    @Test
+    @Order(12)
+    void findPopularFilmsNoResults() throws Exception {
+        mockMvc.perform(get("/films/popular?count=10&year=1900").contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(result -> assertThat(result.getResponse().getContentAsString())
+                        .isEqualToIgnoringWhitespace("[]"));
+    }
+
+    @DisplayName("GET /films/popular. Получение популярных фильмов с фильтром по жанру и году")
+    @Test
+    @Order(13)
+    void findPopularFilmsByGenreAndYear() throws Exception {
+        for (int i = 0; i < 12; i++) {
+            mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(film)));
+        }
+        for (int i = 0; i < 12; i++) {
+            String path = "/films/" + i + "/like/1";
+            mockMvc.perform(put(path).contentType("application/json"));
+        }
+
+        mockMvc.perform(get("/films/popular?count=10&genreId=1&year=2014").contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(10));
     }
 
 }
