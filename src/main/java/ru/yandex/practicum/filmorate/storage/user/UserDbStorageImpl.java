@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
@@ -53,7 +54,7 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
             DELETE FROM FILMORATE.users WHERE USER_ID = ?
             """;
 
-    public UserDbStorageImpl(JdbcTemplate jdbc, UserRowMapper userRowMapper, FriendRowMapper friendRowMapper) {
+    public UserDbStorageImpl(JdbcOperations jdbc, UserRowMapper userRowMapper, FriendRowMapper friendRowMapper) {
         super(jdbc);
         this.userRowMapper = userRowMapper;
         this.friendRowMapper = friendRowMapper;

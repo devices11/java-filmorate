@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.genre;
 
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -36,7 +37,7 @@ public class GenreDbStorageImpl extends BaseStorage<Genre> implements GenreDbSto
              WHERE film_id = ?
             """;
 
-    public GenreDbStorageImpl(JdbcTemplate jdbc, GenreRowMapper genreRowMapper) {
+    public GenreDbStorageImpl(JdbcOperations jdbc, GenreRowMapper genreRowMapper) {
         super(jdbc);
         this.genreRowMapper = genreRowMapper;
     }

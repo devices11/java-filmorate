@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
@@ -76,8 +76,33 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     private static final String DELETE_ALL_LIKE_BY_USER_ID_QUERY = """
             DELETE FROM filmorate.likes WHERE user_id = ?
             """;
+    private static final String INSERT_FILM_DIRECTOR_QUERY = """
+            INSERT INTO filmorate.film_directors (director_id, film_id)
+            VALUES(?, ?)
+            """;
+    private static final String DELETE_FILM_DIRECTOR_QUERY = """
+            DELETE FROM filmorate.film_directors WHERE film_id = ?
+            """;
+    private static final String FIND_FILMS_BY_DIRECTOR_ID_ORDER_BY_RELEASE_DATE_QUERY = """
+            SELECT f.*, m."name" AS mpa_name
+            FROM filmorate.FILMS f
+            JOIN filmorate.FILM_DIRECTORS fd ON f.FILM_ID = fd.FILM_ID
+            JOIN filmorate.MPA m ON f.MPA_ID = m.id
+            WHERE fd.DIRECTOR_ID = ?
+            ORDER BY f.RELEASE_DATE
+            """;
+    private static final String FIND_FILMS_BY_DIRECTOR_ID_ORDER_BY_LIKES_QUERY = """
+            SELECT f.*, m."name" AS mpa_name, COUNT(l.FILM_ID) AS COUNT_LIKES
+            FROM filmorate.FILMS f
+            JOIN filmorate.FILM_DIRECTORS fd ON f.FILM_ID = fd.FILM_ID
+            JOIN filmorate.MPA m ON f.MPA_ID = m.id
+            JOIN filmorate.LIKES l ON f.FILM_ID = l.FILM_ID
+            WHERE fd.DIRECTOR_ID = ?
+            GROUP BY l.FILM_ID
+            ORDER BY COUNT_LIKES DESC
+            """;
 
-    public FilmDbStorageImpl(JdbcTemplate jdbc, FilmRowMapper filmRowMapper) {
+    public FilmDbStorageImpl(JdbcOperations jdbc, FilmRowMapper filmRowMapper) {
         super(jdbc);
         this.filmRowMapper = filmRowMapper;
     }
@@ -103,6 +128,7 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
         );
         film.setId(id);
         updateGenres(film);
+        updateDirector(film);
         return film;
     }
 
@@ -117,6 +143,7 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
                 film.getId()
         );
         updateGenres(film);
+        updateDirector(film);
         return film;
     }
 
@@ -152,6 +179,14 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
         delete(DELETE_FILM_QUERY, id);
     }
 
+    @Override
+    public Collection<Film> findByDirectorId(int directorId, String sortBy) {
+        if (sortBy.equals("likes"))
+            return findMany(filmRowMapper, FIND_FILMS_BY_DIRECTOR_ID_ORDER_BY_LIKES_QUERY, directorId);
+        else
+            return findMany(filmRowMapper, FIND_FILMS_BY_DIRECTOR_ID_ORDER_BY_RELEASE_DATE_QUERY, directorId);
+    }
+
     private Integer getMpaId(Film film) {
         return film.getMpa() != null ? film.getMpa().getId() : null;
     }
@@ -173,4 +208,19 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
         Integer count = jdbc.queryForObject(FIND_LIKE_BY_FILM_ID_QUERY, Integer.class, filmId, userId);
         return count != null && count > 0;
     }
+
+    private void updateDirector(Film film) {
+        if (film.getDirectors() != null) {
+            delete(DELETE_FILM_DIRECTOR_QUERY, film.getId());
+
+            List<Object[]> batchArgs = film.getDirectors().stream()
+                    .distinct()
+                    .map(director -> new Object[]{director.getId(), film.getId()})
+                    .toList();
+
+            jdbc.batchUpdate(INSERT_FILM_DIRECTOR_QUERY, batchArgs);
+        }
+    }
+
+
 }
