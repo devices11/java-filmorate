@@ -52,16 +52,19 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
             SELECT COUNT(*) FROM FILMORATE.likes WHERE film_id = ? and user_id = ?
             """;
     private static final String FIND_POPULAR_FILM_QUERY = """
-            SELECT f.*, m."name" AS mpa_name
-            FROM filmorate.films f
-            JOIN filmorate.MPA m ON f.MPA_ID = m.id
-            LEFT JOIN (
-                SELECT l.FILM_ID, COUNT(l.FILM_ID) AS like_count
-                FROM filmorate.likes l
-                GROUP BY l.FILM_ID
-            ) likes ON f.film_id = likes.FILM_ID
-            ORDER BY like_count DESC
-            LIMIT ?;
+                SELECT DISTINCT f.*, m."name" AS mpa_name, COALESCE(likes.like_count, 0) AS like_count
+                FROM filmorate.films f
+                JOIN filmorate.MPA m ON f.MPA_ID = m.id
+                LEFT JOIN (
+                    SELECT l.FILM_ID, COUNT(l.FILM_ID) AS like_count
+                    FROM filmorate.likes l
+                    GROUP BY l.FILM_ID
+                ) likes ON f.film_id = likes.FILM_ID
+                LEFT JOIN filmorate.film_genres fg ON f.film_id = fg.film_id
+                WHERE (? IS NULL OR fg.genre_id = ?)
+                  AND (? IS NULL OR EXTRACT(YEAR FROM f.release_date) = ?)
+                ORDER BY like_count DESC
+                LIMIT ?;
             """;
     private static final String INSERT_FILM_LIKE_QUERY = """
             INSERT INTO filmorate.likes (film_id, user_id)
@@ -121,8 +124,9 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     }
 
     @Override
-    public Collection<Film> findPopular(Integer count) {
-        return findMany(filmRowMapper, FIND_POPULAR_FILM_QUERY, count);
+    public Collection<Film> findPopular(Integer count, Long genreId, Integer year) {
+        Object[] params = {genreId, genreId, year, year, count};
+        return findMany(filmRowMapper, FIND_POPULAR_FILM_QUERY, params);
     }
 
     @Override

@@ -15,7 +15,7 @@ public interface FilmDbStorage {
 
     Film update(Film film);
 
-    Collection<Film> findPopular(Integer count);
+    Collection<Film> findPopular(Integer count, Long genreId, Integer year);
 
     void addLike(long filmId, long userId);
 
