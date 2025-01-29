@@ -37,4 +37,6 @@ public class Film {
 
     private Collection<Genre> genres;
 
+    private Collection<Director> directors;
+
 }
