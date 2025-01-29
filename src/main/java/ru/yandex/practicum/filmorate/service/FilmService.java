@@ -13,7 +13,6 @@ import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
