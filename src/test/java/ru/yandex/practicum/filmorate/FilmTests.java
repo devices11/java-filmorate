@@ -393,4 +393,48 @@ public class FilmTests {
                 .andExpect(jsonPath("$.length()").value(1));
     }
 
+    @DisplayName("GET /films/director/{directorId}. " +
+            "Получение списка фильмов режиссера отсортированных по количеству году выпуска")
+    @Test
+    void findByDirectorIdSortReleaseDate() throws Exception {
+        mockMvc.perform(get("/films/director/4").queryParam("sortBy", "year")
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(200))
+                .andExpect(jsonPath("$[1].id").value(201))
+                .andExpect(jsonPath("$[2].id").value(202));
+    }
+
+    @DisplayName("GET /films/director/{directorId}. " +
+            "Получение списка фильмов режиссера отсортированных по количеству лайков")
+    @Test
+    void findByDirectorIdSorLikes() throws Exception {
+        mockMvc.perform(get("/films/director/4").queryParam("sortBy", "likes")
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(202))
+                .andExpect(jsonPath("$[1].id").value(201))
+                .andExpect(jsonPath("$[2].id").value(200));
+    }
+
+    @DisplayName("GET /films/director/{directorId}. " +
+            "Получение списка фильмов режиссера отсортированных по дефолту")
+    @Test
+    void findByDirectorIdDefaultSort() throws Exception {
+        mockMvc.perform(get("/films/director/4")
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(200))
+                .andExpect(jsonPath("$[1].id").value(201))
+                .andExpect(jsonPath("$[2].id").value(202));
+    }
+
+    @DisplayName("GET /films/director/{directorId}. " +
+            "Получение списка фильмов режиссера отсортированных по количеству лайков")
+    @Test
+    void findByDirectorIdNotFound() throws Exception {
+        mockMvc.perform(get("/films/director/11111").queryParam("sortBy", "year")
+                        .contentType("application/json"))
+                .andExpect(status().isNotFound());
+    }
 }

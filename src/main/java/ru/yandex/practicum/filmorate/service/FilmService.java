@@ -111,6 +111,7 @@ public class FilmService {
     }
 
     public Collection<Film> getFilmsByDirector(Integer directorId, String sortBy) {
+        checkDirector(directorId);
         Collection<Film> films = filmStorage.findByDirectorId(directorId, sortBy);
         Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
         Map<Long, List<Director>> directorsByFilmId = directorStorage.findAllByFilms();
@@ -125,6 +126,12 @@ public class FilmService {
     private void checkUser(Long userId) {
         if (userStorage.findById(userId).isEmpty()) {
             throw new NotFoundException("Пользователь не найден");
+        }
+    }
+
+    private void checkDirector(Integer directorId) {
+        if (directorStorage.findById(directorId).isEmpty()) {
+            throw new NotFoundException("Режисер не найден");
         }
     }
 

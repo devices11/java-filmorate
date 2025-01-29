@@ -55,7 +55,6 @@ public class DirectorDbStorageImpl extends BaseStorage<Director> implements Dire
         this.directorRowMapper = directorRowMapper;
     }
 
-
     @Override
     public Optional<Director> findById(long id) {
         return findOne(directorRowMapper, FIND_BY_ID_QUERY, id);

@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Director;
@@ -26,6 +25,7 @@ public class DirectorService {
 
     public Director add(Director director) {
         try {
+            System.out.println("Отправил на создание");
             return directorStorage.add(director);
         } catch (DataIntegrityViolationException e) {
             throw new DataIntegrityViolationException("Режиссер с таким именем уже существует: " + director.getName());

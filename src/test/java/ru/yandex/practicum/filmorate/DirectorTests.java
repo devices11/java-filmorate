@@ -1,17 +1,22 @@
 package ru.yandex.practicum.filmorate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.jdbc.AutoConfigureDataJdbc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.controller.DirectorController;
-import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.model.Director;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,16 +34,21 @@ public class DirectorTests {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private JdbcOperations jdbc;
+
+    @Transactional
     @DisplayName("POST /directors - Добавление режиссера")
     @Test
     void addDirector() throws Exception {
-        Director director = Director.builder().id(11).name("авпррар").build();
+        jdbc.update("DELETE FROM filmorate.directors CASCADE");
+        Director director = Director.builder().name("авпррар").build();
 
         mockMvc.perform(post("/directors").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(director)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").isNotEmpty());
-//                .andExpect(jsonPath("$.name").value(director.getName()));
+                .andExpect(jsonPath("$.id").isNotEmpty())
+                .andExpect(jsonPath("$.name").value(director.getName()));
     }
 
     @DisplayName("POST /directors. Добавление режиссера. name не заполнен")
