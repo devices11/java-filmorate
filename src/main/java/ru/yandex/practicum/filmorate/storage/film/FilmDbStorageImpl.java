@@ -246,6 +246,4 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
             jdbc.batchUpdate(INSERT_FILM_DIRECTOR_QUERY, batchArgs);
         }
     }
-
-
 }
