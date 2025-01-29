@@ -60,8 +60,8 @@ public class FilmController {
 
     @GetMapping("/common")
     public List<Film> findCommonFilms(@RequestParam(name = "userId") Long userId,
-                                      @RequestParam(name = "friendId") Long friendId){
-        return filmService.findFilmsByUserId(userId,friendId);
+                                      @RequestParam(name = "friendId") Long friendId) {
+        return filmService.findFilmsByUserId(userId, friendId);
     }
 
     @DeleteMapping("/{id}")

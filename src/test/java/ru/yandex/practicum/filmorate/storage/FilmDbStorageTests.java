@@ -1,9 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.jdbc.AutoConfigureDataJdbc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,7 +12,9 @@ import ru.yandex.practicum.filmorate.storage.film.FilmDbStorageImpl;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -148,5 +147,32 @@ public class FilmDbStorageTests {
         boolean isHaveLike = filmDbStorage.isLikeExists(filmFromDB.getId(), user.getId());
 
         assertThat(isHaveLike).isEqualTo(false);
+    }
+
+    @DisplayName("получение списка понравившихся фильмов")
+    @Test
+    public void getFilmsByUserId() {
+        user.setId(userDbStorage.create(user).getId());
+        List<Long> filmsFromDB = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            Film filmFromDB = filmDbStorage.add(film);
+            filmsFromDB.add(filmFromDB.getId());
+            filmDbStorage.addLike(filmFromDB.getId(), user.getId());
+        }
+        List<Long> filmIdFromDB = filmDbStorage.findFilmsByUserId(user.getId());
+        assertThat(filmsFromDB.size()).isEqualTo(filmIdFromDB.size());
+        Assertions.assertTrue(filmIdFromDB.containsAll(filmsFromDB));
+    }
+
+    @DisplayName("получение колличества лайков фильма")
+    @Test
+    public void getCountLikesFilm() {
+        Film filmFromDB = filmDbStorage.add(film);
+        for (int i = 0; i < 3; i++) {
+            user.setId(userDbStorage.create(user).getId());
+            filmDbStorage.addLike(filmFromDB.getId(), user.getId());
+        }
+        Long countLikes = filmDbStorage.getCountLikesFilm(filmFromDB.getId());
+        assertThat(countLikes).isEqualTo(3);
     }
 }
