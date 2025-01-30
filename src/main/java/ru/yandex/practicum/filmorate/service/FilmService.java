@@ -14,9 +14,7 @@ import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +24,18 @@ public class FilmService {
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
     private final DirectorDbStorage directorStorage;
+
+    public List<Film> findCommonFilms(long userId, long friendId) {
+        checkUser(userId);
+        checkUser(friendId);
+        List<Film> filmsUser = filmStorage.findLikedFilmsByUserId(userId);
+        List<Film> filmsFriend = filmStorage.findLikedFilmsByUserId(friendId);
+        return filmsUser.stream()
+                .filter(filmsFriend::contains)
+                .map(this::setGenres)
+                .toList();
+    }
+
 
     public Film findById(Long id) {
         return filmStorage.findById(id)

@@ -465,4 +465,26 @@ public class FilmTests {
                         .contentType("application/json"))
                 .andExpect(status().isNotFound());
     }
+
+    @DisplayName("GET /films/common. Получение общих фильмов, userId и friendId указаны")
+    @Test
+    void findCommonFilms() throws Exception {
+        mockMvc.perform(get("/films/common?userId=2&friendId=3").contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @DisplayName("GET /films/common. Получение общих фильмов, params не указаны")
+    @Test
+    public void findCommonFilmsNoParams() throws Exception {
+        mockMvc.perform(get("/films/common").contentType("application/json"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @DisplayName("GET /films/common. Получение общих фильмов, пользователей не существует")
+    @Test
+    public void findCommonFilmsNoUserId() throws Exception {
+        mockMvc.perform(get("/films/common?userId=99999&friendId=666666").contentType("application/json"))
+                .andExpect(status().isNotFound());
+    }
 }
