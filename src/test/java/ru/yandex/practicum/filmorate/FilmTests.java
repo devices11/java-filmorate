@@ -469,42 +469,7 @@ public class FilmTests {
     @DisplayName("GET /films/common. Получение общих фильмов, userId и friendId указаны")
     @Test
     void findCommonFilms() throws Exception {
-        Long userIdOne = null;
-        Long userIdTwo = null;
-
-        for (int i = 0; i < 4; i++) {
-            mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(film))).andDo(result -> {
-                Film filmDB = objectMapper.readValue(result.getResponse().getContentAsString(), Film.class);
-                film.setId(filmDB.getId());
-            });
-        }
-
-        for (int i = 0; i < 2; i++) {
-            mockMvc.perform(post("/users").contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(user))).andDo(result -> {
-                User userDb = objectMapper.readValue(result.getResponse().getContentAsString(), User.class);
-                user.setId(userDb.getId());
-            });
-            if (i == 0) {
-                userIdOne = user.getId();
-            }
-            if (i == 1) {
-                userIdTwo = user.getId();
-            }
-        }
-
-        for (int i = 1; i < 5; i++) {
-            String path = "/films/" + i + "/like/" + userIdOne;
-            mockMvc.perform(put(path).contentType("application/json"));
-        }
-
-        for (int i = 1; i < 3; i++) {
-            String path = "/films/" + i + "/like/" + userIdTwo;
-            mockMvc.perform(put(path).contentType("application/json"));
-        }
-
-        mockMvc.perform(get("/films/common?userId=" + userIdOne + "&friendId=" + userIdTwo).contentType("application/json"))
+        mockMvc.perform(get("/films/common?userId=2&friendId=3").contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
