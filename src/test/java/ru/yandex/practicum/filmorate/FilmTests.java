@@ -7,12 +7,10 @@ import org.springframework.boot.test.autoconfigure.data.jdbc.AutoConfigureDataJd
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.controller.FilmController;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 
 import java.time.LocalDate;
@@ -24,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ActiveProfiles("test")
 @AutoConfigureDataJdbc
 @ComponentScan({"ru.yandex.practicum.filmorate"})
 @WebMvcTest(controllers = FilmController.class)
@@ -48,6 +47,10 @@ public class FilmTests {
                 .id(1)
                 .name("Комедия")
                 .build();
+        Director director = Director.builder()
+                .id(1)
+                .name("Лучший")
+                .build();
         film = Film.builder()
                 .id(1L)
                 .name("John Wick")
@@ -56,6 +59,7 @@ public class FilmTests {
                 .duration(88)
                 .mpa(mpa)
                 .genres(List.of(genre))
+                .directors(List.of(director))
                 .build();
         user = User.builder()
                 .login("test")
@@ -222,6 +226,10 @@ public class FilmTests {
                 .id(2)
                 .name("Драма")
                 .build();
+        Director director = Director.builder()
+                .id(1)
+                .name("Лучший")
+                .build();
         Film updateFilm = Film.builder()
                 .name("TestName")
                 .description("Test description")
@@ -229,6 +237,7 @@ public class FilmTests {
                 .duration(188)
                 .mpa(mpa)
                 .genres(List.of(genre))
+                .directors(List.of(director))
                 .build();
         mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(film)))
@@ -410,6 +419,51 @@ public class FilmTests {
         mockMvc.perform(get("/films/popular?count=10&genreId=1&year=2014").contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(10));
+    }
+
+    @DisplayName("GET /films/director/{directorId}. " +
+            "Получение списка фильмов режиссера отсортированных по количеству году выпуска")
+    @Test
+    void findByDirectorIdSortReleaseDate() throws Exception {
+        mockMvc.perform(get("/films/director/4").queryParam("sortBy", "year")
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(200))
+                .andExpect(jsonPath("$[1].id").value(201))
+                .andExpect(jsonPath("$[2].id").value(202));
+    }
+
+    @DisplayName("GET /films/director/{directorId}. " +
+            "Получение списка фильмов режиссера отсортированных по количеству лайков")
+    @Test
+    void findByDirectorIdSorLikes() throws Exception {
+        mockMvc.perform(get("/films/director/4").queryParam("sortBy", "likes")
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(202))
+                .andExpect(jsonPath("$[1].id").value(201))
+                .andExpect(jsonPath("$[2].id").value(200));
+    }
+
+    @DisplayName("GET /films/director/{directorId}. " +
+            "Получение списка фильмов режиссера отсортированных по дефолту")
+    @Test
+    void findByDirectorIdDefaultSort() throws Exception {
+        mockMvc.perform(get("/films/director/4")
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(200))
+                .andExpect(jsonPath("$[1].id").value(201))
+                .andExpect(jsonPath("$[2].id").value(202));
+    }
+
+    @DisplayName("GET /films/director/{directorId}. " +
+            "Получение списка фильмов режиссера отсортированных по количеству лайков")
+    @Test
+    void findByDirectorIdNotFound() throws Exception {
+        mockMvc.perform(get("/films/director/11111").queryParam("sortBy", "year")
+                        .contentType("application/json"))
+                .andExpect(status().isNotFound());
     }
 
     @DisplayName("GET /films/common. Получение общих фильмов, userId и friendId указаны")

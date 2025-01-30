@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.mpa;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
@@ -16,7 +16,7 @@ public class MpaDbStorageImpl extends BaseStorage<Mpa> implements MpaDbStorage {
     private static final String FIND_ALL_QUERY = "SELECT * FROM filmorate.mpa ORDER BY id";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM filmorate.mpa WHERE id = ?";
 
-    public MpaDbStorageImpl(JdbcTemplate jdbc, MpaRowMapper mpaRowMapper) {
+    public MpaDbStorageImpl(JdbcOperations jdbc, MpaRowMapper mpaRowMapper) {
         super(jdbc);
         this.mpaRowMapper = mpaRowMapper;
     }
