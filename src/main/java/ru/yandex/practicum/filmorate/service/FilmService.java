@@ -36,6 +36,7 @@ public class FilmService {
                 .toList();
     }
 
+
     public Film findById(Long id) {
         return filmStorage.findById(id)
                 .map(this::setGenres)
