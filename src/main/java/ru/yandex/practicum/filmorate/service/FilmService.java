@@ -22,28 +22,14 @@ public class FilmService {
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
 
-    public List<Film> findFilmsByUserId(long userId, long friendId) {
+    public List<Film> findCommonFilms(long userId, long friendId) {
         checkUser(userId);
         checkUser(friendId);
-        List<Long> filmsId = filmStorage.findFilmsByUserId(userId);
-        List<Long> filmsFriend = filmStorage.findFilmsByUserId(friendId);
-        return filmsId.stream()
+        List<Film> filmsUser = filmStorage.findLikedFilmsByUserId(userId);
+        List<Film> filmsFriend = filmStorage.findLikedFilmsByUserId(friendId);
+        return filmsUser.stream()
                 .filter(filmsFriend::contains)
-                .map(filmStorage::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
                 .map(this::setGenres)
-                .sorted((o1, o2) -> {
-                    Long likesFilm1 = filmStorage.getCountLikesFilm(o1.getId());
-                    Long likesFilm2 = filmStorage.getCountLikesFilm(o2.getId());
-                    if (likesFilm1 - likesFilm2 > 0) {
-                        return 1;
-                    }
-                    if (likesFilm1 - likesFilm2 < 0) {
-                        return -1;
-                    }
-                    return 0;
-                })
                 .toList();
     }
 

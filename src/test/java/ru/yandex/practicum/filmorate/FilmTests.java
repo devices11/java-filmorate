@@ -462,7 +462,7 @@ public class FilmTests {
                 .andExpect(status().isBadRequest());
     }
 
-    @DisplayName("GET /films/common. Получение общих фильмов, пользователей не существует не существует")
+    @DisplayName("GET /films/common. Получение общих фильмов, пользователей не существует")
     @Test
     public void findCommonFilmsNoUserId() throws Exception {
         mockMvc.perform(get("/films/common?userId=99999&friendId=666666").contentType("application/json"))

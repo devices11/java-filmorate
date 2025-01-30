@@ -152,27 +152,16 @@ public class FilmDbStorageTests {
     @DisplayName("получение списка понравившихся фильмов")
     @Test
     public void getFilmsByUserId() {
-        user.setId(userDbStorage.create(user).getId());
-        List<Long> filmsFromDB = new ArrayList<>();
+        Long userId = userDbStorage.create(user).getId();
+        List<Film> filmsFromDB = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             Film filmFromDB = filmDbStorage.add(film);
-            filmsFromDB.add(filmFromDB.getId());
-            filmDbStorage.addLike(filmFromDB.getId(), user.getId());
+            filmsFromDB.add(filmFromDB);
+            filmDbStorage.addLike(filmFromDB.getId(), userId);
         }
-        List<Long> filmIdFromDB = filmDbStorage.findFilmsByUserId(user.getId());
-        assertThat(filmsFromDB.size()).isEqualTo(filmIdFromDB.size());
-        Assertions.assertTrue(filmIdFromDB.containsAll(filmsFromDB));
-    }
+        List<Film> filmsUserFromDB = filmDbStorage.findLikedFilmsByUserId(userId);
 
-    @DisplayName("получение колличества лайков фильма")
-    @Test
-    public void getCountLikesFilm() {
-        Film filmFromDB = filmDbStorage.add(film);
-        for (int i = 0; i < 3; i++) {
-            user.setId(userDbStorage.create(user).getId());
-            filmDbStorage.addLike(filmFromDB.getId(), user.getId());
-        }
-        Long countLikes = filmDbStorage.getCountLikesFilm(filmFromDB.getId());
-        assertThat(countLikes).isEqualTo(3);
+        assertThat(filmsUserFromDB.size()).isEqualTo(filmsFromDB.size());
+        Assertions.assertTrue(filmsUserFromDB.containsAll(filmsFromDB));
     }
 }

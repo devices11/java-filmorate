@@ -51,9 +51,6 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     private static final String FIND_LIKE_BY_FILM_ID_QUERY = """
             SELECT COUNT(*) FROM FILMORATE.likes WHERE film_id = ? and user_id = ?
             """;
-    private static final String FIND_ALL_LIKE_BY_FILM_ID_QUERY = """
-            SELECT COUNT(*) FROM FILMORATE.likes WHERE film_id = ?
-            """;
     private static final String FIND_POPULAR_FILM_QUERY = """
                 SELECT DISTINCT f.*, m."name" AS mpa_name, COALESCE(likes.like_count, 0) AS like_count
                 FROM filmorate.films f
@@ -69,10 +66,21 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
                 ORDER BY like_count DESC
                 LIMIT ?;
             """;
-    private static final String FIND_FILMS_BY_USER_ID_QUERY = """
-            SELECT l.FILM_ID
-            FROM filmorate.likes l
-            WHERE user_id = ?;
+    private static final String FIND_LIKED_FILMS_BY_USER_ID_QUERY = """
+            SELECT DISTINCT f.*, m."name" AS mpa_name, COALESCE(likes.like_count, 0) AS like_count
+            FROM filmorate.films f
+            JOIN filmorate.MPA m ON f.MPA_ID = m.id
+            LEFT JOIN (
+                SELECT l.FILM_ID, COUNT(*) AS like_count
+                FROM filmorate.likes l
+                GROUP BY l.FILM_ID
+            ) likes ON f.film_id = likes.FILM_ID
+            WHERE f.film_id IN (
+                SELECT film_id FROM filmorate.films WHERE film_id IN (
+                    SELECT l.FILM_ID
+                    FROM filmorate.likes l
+                    WHERE user_id = ?))
+            ORDER BY like_count DESC
             """;
     private static final String INSERT_FILM_LIKE_QUERY = """
             INSERT INTO filmorate.likes (film_id, user_id)
@@ -94,13 +102,8 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     }
 
     @Override
-    public List<Long> findFilmsByUserId(long userId) {
-        return jdbc.queryForList(FIND_FILMS_BY_USER_ID_QUERY, Long.class, userId);
-    }
-
-    @Override
-    public Long getCountLikesFilm(long filmId) {
-        return jdbc.queryForObject(FIND_ALL_LIKE_BY_FILM_ID_QUERY, Long.class, filmId);
+    public List<Film> findLikedFilmsByUserId(long userId) {
+        return jdbc.query(FIND_LIKED_FILMS_BY_USER_ID_QUERY, filmRowMapper, userId);
     }
 
     @Override
