@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.util.validation.groups.Create;
@@ -67,5 +68,10 @@ public class UserController {
     public Collection<User> commonFriends(@PathVariable long id,
                                           @PathVariable long otherId) {
         return userService.commonFriends(id, otherId);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public Collection<Film> filmsRecommendations(@PathVariable long id) {
+        return userService.filmsRecommendations(id);
     }
 }

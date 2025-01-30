@@ -104,6 +104,27 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
             GROUP BY l.FILM_ID
             ORDER BY COUNT_LIKES DESC
             """;
+    private static final String RECOMMENDATIONS_QUERY = """
+            SELECT DISTINCT f.*, m.ID AS mpa_id, m."name" AS mpa_name
+              FROM FILMORATE.films AS f
+              JOIN FILMORATE.likes AS l ON f.FILM_ID = l.film_id
+              JOIN FILMORATE.MPA AS m ON f.MPA_ID = m.ID
+              WHERE l.user_id = (
+                  SELECT l2.user_id
+                  FROM FILMORATE.likes AS l2
+                  WHERE l2.film_id IN (
+                      SELECT l1.film_id FROM FILMORATE.likes AS l1 WHERE l1.user_id = ?
+                  )
+                  AND l2.user_id != ?
+                  GROUP BY l2.user_id
+                  ORDER BY COUNT(l2.film_id) DESC
+                  LIMIT 1
+              )
+              AND l.film_id NOT IN (
+                  SELECT l3.film_id FROM FILMORATE.likes AS l3 WHERE l3.user_id = ?
+              );
+            """;
+
 
     public FilmDbStorageImpl(JdbcOperations jdbc, FilmRowMapper filmRowMapper) {
         super(jdbc);
@@ -191,6 +212,11 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
             return findMany(filmRowMapper, FIND_FILMS_BY_DIRECTOR_ID_ORDER_BY_RELEASE_DATE_QUERY, directorId);
     }
 
+    @Override
+    public Collection<Film> filmsRecommendations(long userId) {
+        return findMany(filmRowMapper, RECOMMENDATIONS_QUERY, userId, userId, userId);
+    }
+
     private Integer getMpaId(Film film) {
         return film.getMpa() != null ? film.getMpa().getId() : null;
     }
@@ -209,7 +235,7 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     }
 
     public boolean isLikeExists(long filmId, long userId) {
-        Integer count = jdbc.queryForObject(FIND_LIKE_BY_FILM_ID_QUERY, Integer.class, filmId, userId);
+        Integer count = jdbc.queryForObject(FIND_LIKE_BY_FILM_ID_QUERY, Integer.class, filmId, userId); //
         return count != null && count > 0;
     }
 
@@ -225,6 +251,4 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
             jdbc.batchUpdate(INSERT_FILM_DIRECTOR_QUERY, batchArgs);
         }
     }
-
-
 }

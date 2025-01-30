@@ -53,6 +53,7 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
             DELETE FROM FILMORATE.users WHERE USER_ID = ?
             """;
 
+
     public UserDbStorageImpl(JdbcOperations jdbc, UserRowMapper userRowMapper, FriendRowMapper friendRowMapper) {
         super(jdbc);
         this.userRowMapper = userRowMapper;
@@ -118,5 +119,6 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
     public void delete(long id) {
         delete(DELETE_QUERY, id);
     }
+
 
 }
