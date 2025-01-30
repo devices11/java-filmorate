@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
@@ -145,5 +146,10 @@ public class UserService {
             reviewDislikeDbStorage.deleteAllByUserId(id);
         }
         userStorage.delete(id);
+    }
+
+    public List<Film> filmsRecommendations(long userId) {
+        findById(userId);
+        return (List<Film>) filmStorage.filmsRecommendations(userId);
     }
 }

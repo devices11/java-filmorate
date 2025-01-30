@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -17,13 +16,11 @@ public class BaseStorage<T> {
     protected final JdbcOperations jdbc;
 
     protected Optional<T> findOne(RowMapper<T> mapper, String query, Object... params) {
-        try {
-            T result = jdbc.queryForObject(query, mapper, params);
-            return Optional.ofNullable(result);
-        } catch (EmptyResultDataAccessException ignored) {
-            return Optional.empty();
-        }
+        return Optional.ofNullable(
+                jdbc.query(query, mapper, params).stream().findFirst().orElse(null)
+        );
     }
+
 
     protected List<T> findMany(RowMapper<T> mapper, String query, Object... params) {
         return jdbc.query(query, mapper, params);

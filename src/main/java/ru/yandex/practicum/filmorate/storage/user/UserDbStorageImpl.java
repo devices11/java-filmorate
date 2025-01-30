@@ -122,5 +122,4 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
     public List<User> getFriends(long userId) {
         return findMany(friendRowMapper, FIND_ALL_FRIENDS_QUERY, userId);
     }
-
 }
