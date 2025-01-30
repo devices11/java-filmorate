@@ -13,7 +13,7 @@ import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 public class ErrorHandler {
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIncorrectParameter(final ValidationException e) {
         return new ErrorResponse(
                 "Ошибка с входным параметром.", e.getMessage()
