@@ -487,4 +487,47 @@ public class FilmTests {
         mockMvc.perform(get("/films/common?userId=99999&friendId=666666").contentType("application/json"))
                 .andExpect(status().isNotFound());
     }
+
+    @DisplayName("GET /films/search. Поиск фильмов по названию")
+    @Test
+    public void searchFilmsByTitle() throws Exception {
+        mockMvc.perform(get("/films/search?query=Доспехи бога 2&by=title").contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(201));
+    }
+
+    @DisplayName("GET /films/search. Поиск фильмов по имени режисера")
+    @Test
+    public void searchFilmsByDirectors() throws Exception {
+        mockMvc.perform(get("/films/search?query=Пупкин&by=director").contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3));
+    }
+
+    @DisplayName("GET /films/search. Поиск фильмов по названию и имени режисера")
+    @Test
+    public void searchFilmsByTitleAndDirector() throws Exception {
+        film.setName("Самый лучший фильм");
+        mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(film)));
+        mockMvc.perform(get("/films/search?query=чший&by=title,director").contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(1));
+    }
+
+    @DisplayName("GET /films/search. Поиск фильмов по имени режисера, отправлен пустой запрос")
+    @Test
+    public void searchFilmsNotQuery() throws Exception {
+        mockMvc.perform(get("/films/search?query= &by=director").contentType("application/json"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @DisplayName("GET /films/search. Поиск фильмов по имени режисера, отправлен не правильный параметр")
+    @Test
+    public void searchFilmsNotValidParams() throws Exception {
+        mockMvc.perform(get("/films/search?query=кин&by=директор").contentType("application/json"))
+                .andExpect(status().isBadRequest());
+    }
 }

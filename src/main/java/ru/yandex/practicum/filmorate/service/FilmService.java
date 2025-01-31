@@ -2,10 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
@@ -36,6 +33,16 @@ public class FilmService {
                 .toList();
     }
 
+    public List<Film> searchByTitleAndDirector(String query, List<String> by) {
+        if (query.isBlank()) {
+            throw new ValidationException("Задан пустой поисковый запрос");
+        }
+        List<Search> search = by.stream().map(Search::SearchOrder).toList();
+        if (search.contains(null)) {
+            throw new ValidationException("некоректное имя параметра");
+        }
+        return filmStorage.searchByTitleAndDirector(query, search);
+    }
 
     public Film findById(Long id) {
         return filmStorage.findById(id)

@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.film;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Search;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
@@ -82,6 +83,20 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
                     WHERE user_id = ?))
             ORDER BY like_count DESC
             """;
+    private static final String FIND_TITLE_AND_DIRECTOR_BY_SUBSTRING = """
+            SELECT DISTINCT f.*, m."name" AS mpa_name, COALESCE(likes.like_count, 0) AS like_count
+            FROM filmorate.films f
+            JOIN filmorate.MPA m ON f.MPA_ID = m.id
+            LEFT JOIN (
+                SELECT l.FILM_ID, COUNT(*) AS like_count
+                FROM filmorate.likes l
+                GROUP BY l.FILM_ID
+            ) likes ON f.film_id = likes.FILM_ID
+            JOIN filmorate.FILM_DIRECTORS fd ON fd.film_id = f.film_id
+            JOIN filmorate.DIRECTORS AS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID
+            WHERE f."name" LIKE ? OR d."name" LIKE ?
+            ORDER BY like_count DESC
+            """;
     private static final String INSERT_FILM_LIKE_QUERY = """
             INSERT INTO filmorate.likes (film_id, user_id)
             VALUES(?, ?)
@@ -124,6 +139,21 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     public FilmDbStorageImpl(JdbcOperations jdbc, FilmRowMapper filmRowMapper) {
         super(jdbc);
         this.filmRowMapper = filmRowMapper;
+    }
+
+    @Override
+    public List<Film> searchByTitleAndDirector(String query, List<Search> by) {
+        String param = "%" + query + "%";
+        Object[] params = new Object[2];
+        if (by.contains(Search.TITLE) && by.contains(Search.DIRECTOR)) {
+            params[0] = param;
+            params[1] = param;
+        } else if (by.contains(Search.TITLE)) {
+            params[0] = param;
+        } else if (by.contains(Search.DIRECTOR)) {
+            params[1] = param;
+        }
+        return findMany(filmRowMapper, FIND_TITLE_AND_DIRECTOR_BY_SUBSTRING, params);
     }
 
     @Override
