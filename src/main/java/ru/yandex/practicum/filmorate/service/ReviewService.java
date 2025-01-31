@@ -61,7 +61,7 @@ public class ReviewService {
     public void setDislike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
         //TODO: добавить логику для проверки, что пользователь еще не ставил дизлайк
-        review.setUseful(review.getUseful() - 1);
+        review.setUseful(-1);
         reviewDbStorage.update(review);
     }
 
