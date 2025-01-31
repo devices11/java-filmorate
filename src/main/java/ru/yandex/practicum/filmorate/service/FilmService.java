@@ -66,10 +66,10 @@ public class FilmService {
         });
         return films.stream().sorted((o1, o2) -> {
             if (!o1.getDirectors().isEmpty() && o2.getDirectors().isEmpty()) {
-                return 1;
+                return -1;
             }
             if (o1.getDirectors().isEmpty() && !o2.getDirectors().isEmpty()) {
-                return -1;
+                return 1;
             }
             return 0;
         }).toList();
