@@ -19,7 +19,8 @@ INSERT INTO FILMORATE.USERS (LOGIN,NAME,EMAIL,BIRTHDAY) VALUES
 INSERT INTO FILMORATE.FILMS (film_id, "name",DESCRIPTION,RELEASE_DATE,DURATION,MPA_ID) VALUES
       (200,'Доспехи бога 1','Фильм с Джеки','1986-12-01',100,5),
       (201,'Доспехи бога 2','Фильм с Джеки','1987-12-01',100,5),
-      (202,'Доспехи бога 3','Фильм с Джеки','1988-12-01',100,5);
+      (202,'Доспехи бога 3','Фильм с Джеки','1988-12-01',100,5),
+      (203,'Доспехи бога 3','Фильм с Джеки','1988-12-01',100,5);
 --rollback DELETE FROM filmorate.FILMS
 
 --changeset devices11:insert-LIKES
