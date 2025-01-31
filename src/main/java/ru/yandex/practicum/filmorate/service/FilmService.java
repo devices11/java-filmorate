@@ -40,15 +40,14 @@ public class FilmService {
     public List<Film> findCommonFilms(long userId, long friendId) {
         checkUser(userId);
         checkUser(friendId);
-        List<Film> filmsUser = filmStorage.findLikedFilmsByUserId(userId);
-        List<Film> filmsFriend = filmStorage.findLikedFilmsByUserId(friendId);
+        Collection<Film> filmsUser = setGenresAndDirectorsToFilms(filmStorage.findLikedFilmsByUserId(userId));
+        Collection<Film> filmsFriend = setGenresAndDirectorsToFilms(filmStorage.findLikedFilmsByUserId(friendId));
         return filmsUser.stream()
                 .filter(filmsFriend::contains)
-                .map(this::setGenres)
                 .toList();
     }
 
-    public List<Film> searchByTitleAndDirector(String query, List<String> by) {
+    public Collection<Film> searchByTitleAndDirector(String query, List<String> by) {
         if (query.isBlank()) {
             throw new ValidationException("Задан пустой поисковый запрос");
         }
@@ -57,22 +56,8 @@ public class FilmService {
         if (!paramsCheck) {
             throw new ValidationException("указан неправильный параметр запроса");
         }
-        Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
-        Map<Long, List<Director>> directorsByFilmId = directorStorage.findAllByFilms();
         List<Film> films = filmStorage.searchByFilmsAndDirectors(query, by);
-        films.forEach(film -> {
-            film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of()));
-            film.setDirectors(directorsByFilmId.getOrDefault(film.getId(), List.of()));
-        });
-        return films.stream().sorted((o1, o2) -> {
-            if (!o1.getDirectors().isEmpty() && o2.getDirectors().isEmpty()) {
-                return 1;
-            }
-            if (o1.getDirectors().isEmpty() && !o2.getDirectors().isEmpty()) {
-                return -1;
-            }
-            return 0;
-        }).toList();
+        return setGenresAndDirectorsToFilms(films);
     }
 
     public Film findById(Long id) {
