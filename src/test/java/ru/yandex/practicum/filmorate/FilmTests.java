@@ -494,6 +494,7 @@ public class FilmTests {
         film.setName("Самый худший фильм");
         mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(film)));
+
         mockMvc.perform(get("/films/search?query=дший&by=title").contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -503,13 +504,15 @@ public class FilmTests {
     @DisplayName("GET /films/search. Поиск фильмов без режисера, по названию и имени режисера")
     @Test
     public void searchFilmsByTitleAndDirectorNotFoundDirector() throws Exception {
-        film.setName("John Wick 0");
+        film.setName("New film without director");
         film.setDirectors(List.of());
         mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(film)));
-        mockMvc.perform(get("/films/search?query=John&by=title,director").contentType("application/json"))
+
+        mockMvc.perform(get("/films/search?query=ilm without dir&by=title,director").contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("John Wick 0"));
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("New film without director"));
     }
 
     @DisplayName("GET /films/search. Поиск фильмов по имени режисера")
@@ -518,9 +521,9 @@ public class FilmTests {
         mockMvc.perform(get("/films/search?query=Пупкин&by=director").contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0].name").value("Доспехи бога 3"))
+                .andExpect(jsonPath("$[0].name").value("Доспехи бога 1"))
                 .andExpect(jsonPath("$[1].name").value("Доспехи бога 2"))
-                .andExpect(jsonPath("$[2].name").value("Доспехи бога 1"));
+                .andExpect(jsonPath("$[2].name").value("Доспехи бога 3"));
     }
 
     @DisplayName("GET /films/search. Поиск фильмов по названию и имени режисера")
@@ -533,6 +536,7 @@ public class FilmTests {
         film.setDirectors(List.of(director));
         mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(film)));
+
         mockMvc.perform(get("/films/search?query=Петр&by=title,director").contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))

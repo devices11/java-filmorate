@@ -89,13 +89,9 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
                  FROM filmorate.likes l
                  GROUP BY l.FILM_ID
             ) likes ON f.film_id = likes.FILM_ID
-            WHERE f."name" LIKE ? OR f.FILM_ID IN (
-                    SELECT FILM_ID
-                    FROM filmorate.FILM_DIRECTORS fd2
-                    WHERE DIRECTOR_ID IN (SELECT d2.DIRECTOR_ID
-                                        FROM filmorate.DIRECTORS d2
-                                        WHERE d2."name" LIKE ?))
-            ORDER BY like_count DESC
+            LEFT JOIN filmorate.FILM_DIRECTORS fd ON fd.film_id = f.film_id
+            LEFT JOIN filmorate.DIRECTORS AS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID
+            WHERE (? IS NOT NULL AND f."name" ILIKE ?) OR (? IS NOT NULL AND d."name" ILIKE ?)
             """;
     private static final String INSERT_FILM_LIKE_QUERY = """
             INSERT INTO filmorate.likes (film_id, user_id)
@@ -145,7 +141,8 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     public List<Film> searchByFilmsAndDirectors(String query, List<String> by) {
         String searchTitle = by.contains("title") ? "%" + query + "%" : null;
         String searchDirector = by.contains("director") ? "%" + query + "%" : null;
-        return findMany(filmRowMapper, FIND_FILMS_BY_DIRECTOR_AND_FILM_NAME_QUERY, searchTitle, searchDirector);
+        return findMany(filmRowMapper, FIND_FILMS_BY_DIRECTOR_AND_FILM_NAME_QUERY,
+                searchTitle, searchTitle, searchDirector, searchDirector);
     }
 
     @Override
