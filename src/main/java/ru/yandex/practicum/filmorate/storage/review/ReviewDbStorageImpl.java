@@ -70,8 +70,8 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
         update(UPDATE_QUERY,
                 review.getContent(),
                 review.getIsPositive(),
-                review.getReviewId(),
-                review.getUseful()
+                review.getUseful(),
+                review.getReviewId()
         );
         return review;
     }
