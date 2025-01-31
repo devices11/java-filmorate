@@ -176,6 +176,7 @@ public class FilmService {
         return film;
     }
 
+    //TODO: Удалить оценки и удалить реакции на оценки
     public void delete(long id) {
         findById(id);
         filmStorage.deleteAllLikeByFilmId(id);

@@ -122,7 +122,8 @@ public class UserService {
         }
     }
 
-    public void delete(long id) {
+    //TODO: Удалить оценки и удалить реакции на оценки
+    public void delete(Long id) {
         validateUserExistence(id);
         userStorage.deleteAllFriendshipConnections(id);
         filmStorage.deleteAllLikeByUserId(id);

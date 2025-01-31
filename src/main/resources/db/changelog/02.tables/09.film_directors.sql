@@ -17,4 +17,3 @@ ALTER TABLE filmorate.film_directors ADD CONSTRAINT film_directors_film_fk
 ALTER TABLE filmorate.film_directors ADD CONSTRAINT film_directors_directors_fk
     FOREIGN KEY (director_id) REFERENCES filmorate.directors(director_id) ON DELETE CASCADE;
 --rollback DROP TABLE filmorate.film_directors;
-
