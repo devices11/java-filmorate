@@ -53,15 +53,15 @@ public class ReviewService {
 
     public void setLike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
-        //TODO: добавить логику для проверки, что пользователь еще не ставил лайк
+        //TODO: добавить логику для проверки, что пользователь еще не ставил лайк + (Если ставит лайк, до дис удалить)
         review.setUseful(review.getUseful() + 1);
         reviewDbStorage.update(review);
     }
 
     public void setDislike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
-        //TODO: добавить логику для проверки, что пользователь еще не ставил дизлайк
-        review.setUseful(-1);
+        //TODO: добавить логику для проверки, что пользователь еще не ставил дизлайк + (Если ставит диз, то лайк удалить)
+        review.setUseful(review.getUseful() - 1);
         reviewDbStorage.update(review);
     }
 
