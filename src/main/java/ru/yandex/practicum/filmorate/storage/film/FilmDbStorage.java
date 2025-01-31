@@ -1,12 +1,15 @@
 package ru.yandex.practicum.filmorate.storage.film;
 
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Search;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 public interface FilmDbStorage {
+
+    List<Film> searchByTitleAndDirector(String query, List<Search> by);
 
     List<Film> findLikedFilmsByUserId(long userId);
 
