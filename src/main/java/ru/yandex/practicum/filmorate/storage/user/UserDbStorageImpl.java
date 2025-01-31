@@ -93,14 +93,22 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
         return user;
     }
 
+    @Override
+    public void delete(long id) {
+        delete(DELETE_QUERY, id);
+    }
+
+    @Override
     public void addFriend(boolean confirmed, long userId, long friendId) {
         update(INSERT_FRIEND_QUERY, confirmed, userId, friendId);
     }
 
+    @Override
     public void updateFriend(boolean confirmed, long userId, long friendId) {
         update(UPDATE_FRIENDS_QUERY, confirmed, userId, friendId);
     }
 
+    @Override
     public void deleteFriend(long userId, long friendId) {
         update(DELETE_FRIEND_QUERY, userId, friendId);
     }
@@ -110,13 +118,9 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
         delete(DELETE_ALL_FRIENDSHIP_CONNECTION_QUERY, userId, userId);
     }
 
+    @Override
     public List<User> getFriends(long userId) {
         return findMany(friendRowMapper, FIND_ALL_FRIENDS_QUERY, userId);
-    }
-
-    @Override
-    public void delete(long id) {
-        delete(DELETE_QUERY, id);
     }
 
 }
