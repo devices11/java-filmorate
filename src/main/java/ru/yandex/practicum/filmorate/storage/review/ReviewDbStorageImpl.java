@@ -30,7 +30,7 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
 
     private static final String UPDATE_QUERY = """
             UPDATE filmorate.reviews
-            SET content = ?, is_positive = ? WHERE review_id = ?
+            SET content = ?, is_positive = ?, useful = ? WHERE review_id = ?
             """;
 
     private static final String DELETE_QUERY = """
@@ -70,7 +70,8 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
         update(UPDATE_QUERY,
                 review.getContent(),
                 review.getIsPositive(),
-                review.getReviewId()
+                review.getReviewId(),
+                review.getUseful()
         );
         return review;
     }
