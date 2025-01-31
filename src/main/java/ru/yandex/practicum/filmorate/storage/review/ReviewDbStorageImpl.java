@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.ReviewRowMapper;
 
+import java.util.Collection;
 import java.util.Optional;
 
 @Repository
@@ -14,6 +15,12 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
 
     private static final String FIND_BY_ID_QUERY = """
             SELECT * FROM filmorate.reviews WHERE review_id = ?
+            """;
+
+    private static final String FIND_REVIEWS_QUERY = """
+            SELECT * FROM filmorate.reviews
+            WHERE (? IS NULL OR film_id = ?)
+            ORDER BY useful DESC LIMIT ?
             """;
 
     private static final String INSERT_QUERY = """
@@ -38,6 +45,11 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
     @Override
     public Optional<Review> findById(Long id) {
         return findOne(reviewRowMapper, FIND_BY_ID_QUERY, id);
+    }
+
+    @Override
+    public Collection<Review> findReviews(Long filmId, int count) {
+        return findMany(reviewRowMapper, FIND_REVIEWS_QUERY, filmId, filmId, count);
     }
 
     @Override

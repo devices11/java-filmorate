@@ -10,12 +10,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.service.ReviewService;
 import ru.yandex.practicum.filmorate.util.validation.groups.Create;
 import ru.yandex.practicum.filmorate.util.validation.groups.Update;
+
+import java.util.Collection;
 
 @RestController
 @RequiredArgsConstructor
@@ -43,5 +46,36 @@ public class ReviewController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable long id) {
         reviewService.delete(id);
+    }
+
+    @GetMapping
+    public Collection<Review> findReviews(
+            @RequestParam(name = "filmId", required = false) Long filmId,
+            @RequestParam(name = "count", defaultValue = "10") int count) {
+        return reviewService.findReviews(filmId, count);
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void setLike(@PathVariable long id, @PathVariable long userId) {
+        reviewService.setLike(id, userId);
+    }
+
+    @PutMapping("/{id}/dislike/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void setDislike(@PathVariable long id, @PathVariable long userId) {
+        reviewService.setDislike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeLike(@PathVariable long id, @PathVariable long userId) {
+        reviewService.removeLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/dislike/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeDislike(@PathVariable long id, @PathVariable long userId) {
+        reviewService.removeDislike(id, userId);
     }
 }
