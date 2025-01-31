@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
@@ -16,6 +17,8 @@ public class ReviewService {
     private final ReviewDbStorage reviewDbStorage;
     private final UserService userService;
     private final FilmService filmService;
+    private final ReviewLikeService reviewLikeService;
+    private final ReviewDislikeService reviewDislikeService;
 
     public Review findById(Long id) {
         return reviewDbStorage.findById(id)
@@ -51,28 +54,61 @@ public class ReviewService {
         return reviewDbStorage.findReviews(filmId, count);
     }
 
-    public void setLike(Long reviewId, Long userId) {
+    public void setReviewLike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
-        //TODO: добавить логику для проверки, что пользователь еще не ставил лайк + (Если ставит лайк, до дис удалить)
+        userService.findById(userId);
+        if (reviewLikeService.find(userId, reviewId).isPresent()) {
+            throw new DataIntegrityViolationException("Этот пользователь уже поставил лайк этому отзыву");
+        }
+        if (reviewDislikeService.find(userId, reviewId).isPresent()) {
+            reviewDislikeService.delete(userId, reviewId);
+            reviewLikeService.create(userId, reviewId);
+            review.setUseful(review.getUseful() + 2);
+            reviewDbStorage.update(review);
+            return;
+        }
+        reviewLikeService.create(userId, reviewId);
         review.setUseful(review.getUseful() + 1);
         reviewDbStorage.update(review);
+
     }
 
-    public void setDislike(Long reviewId, Long userId) {
+    public void setReviewDislike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
-        //TODO: добавить логику для проверки, что пользователь еще не ставил дизлайк + (Если ставит диз, то лайк удалить)
+        userService.findById(userId);
+        if (reviewDislikeService.find(userId, reviewId).isPresent()) {
+            throw new DataIntegrityViolationException("Этот пользователь уже поставил дизлайк этому отзыву");
+        }
+        if (reviewLikeService.find(userId, reviewId).isPresent()) {
+            reviewLikeService.delete(userId, reviewId);
+            reviewDislikeService.create(userId, reviewId);
+            review.setUseful(review.getUseful() - 2);
+            reviewDbStorage.update(review);
+            return;
+        }
+        reviewDislikeService.create(userId, reviewId);
         review.setUseful(review.getUseful() - 1);
         reviewDbStorage.update(review);
     }
 
-    public void removeLike(Long reviewId, Long userId) {
+    public void removeReviewLike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
+        userService.findById(userId);
+        if (reviewLikeService.find(userId, reviewId).isEmpty()) {
+            throw new DataIntegrityViolationException("Нельзя убрать лайк, если раньше его не ставили");
+        }
+        reviewLikeService.delete(userId, reviewId);
         review.setUseful(review.getUseful() - 1);
         reviewDbStorage.update(review);
     }
 
-    public void removeDislike(Long reviewId, Long userId) {
+    public void removeReviewDislike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
+        userService.findById(userId);
+        if (reviewDislikeService.find(userId, reviewId).isEmpty()) {
+            throw new DataIntegrityViolationException("Нельзя убрать дизлайк, если раньше его не ставили");
+        }
+        reviewDislikeService.delete(userId, reviewId);
         review.setUseful(review.getUseful() + 1);
         reviewDbStorage.update(review);
     }
