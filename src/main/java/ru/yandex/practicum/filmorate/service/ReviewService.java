@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.ReviewDislike;
+import ru.yandex.practicum.filmorate.model.ReviewLike;
 import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
@@ -60,14 +62,18 @@ public class ReviewService {
         if (reviewLikeService.find(userId, reviewId).isPresent()) {
             throw new DataIntegrityViolationException("Этот пользователь уже поставил лайк этому отзыву");
         }
-        if (reviewDislikeService.find(userId, reviewId).isPresent()) {
-            reviewDislikeService.delete(userId, reviewId);
-            reviewLikeService.create(userId, reviewId);
+        ReviewLike reviewLike = ReviewLike.builder()
+                .reviewId(reviewId)
+                .userId(userId)
+                .build();
+        ReviewDislike reviewDislike = reviewDislikeService.find(userId, reviewId).orElse(null);
+        reviewLikeService.create(reviewLike);
+        if (Objects.nonNull(reviewDislike)) {
+            reviewDislikeService.delete(reviewDislike.getId());
             review.setUseful(review.getUseful() + 2);
             reviewDbStorage.update(review);
             return;
         }
-        reviewLikeService.create(userId, reviewId);
         review.setUseful(review.getUseful() + 1);
         reviewDbStorage.update(review);
 
@@ -79,14 +85,18 @@ public class ReviewService {
         if (reviewDislikeService.find(userId, reviewId).isPresent()) {
             throw new DataIntegrityViolationException("Этот пользователь уже поставил дизлайк этому отзыву");
         }
-        if (reviewLikeService.find(userId, reviewId).isPresent()) {
-            reviewLikeService.delete(userId, reviewId);
-            reviewDislikeService.create(userId, reviewId);
+        ReviewDislike reviewDislike = ReviewDislike.builder()
+                .reviewId(reviewId)
+                .userId(userId)
+                .build();
+        ReviewLike reviewLike = reviewLikeService.find(userId, reviewId).orElse(null);
+        reviewDislikeService.create(reviewDislike);
+        if (Objects.nonNull(reviewLike)) {
+            reviewLikeService.delete(reviewLike.getId());
             review.setUseful(review.getUseful() - 2);
             reviewDbStorage.update(review);
             return;
         }
-        reviewDislikeService.create(userId, reviewId);
         review.setUseful(review.getUseful() - 1);
         reviewDbStorage.update(review);
     }
@@ -94,10 +104,11 @@ public class ReviewService {
     public void removeReviewLike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
         userService.findById(userId);
-        if (reviewLikeService.find(userId, reviewId).isEmpty()) {
+        ReviewLike reviewLike = reviewLikeService.find(userId, reviewId).orElse(null);
+        if (Objects.isNull(reviewLike)) {
             throw new DataIntegrityViolationException("Нельзя убрать лайк, если раньше его не ставили");
         }
-        reviewLikeService.delete(userId, reviewId);
+        reviewLikeService.delete(reviewLike.getId());
         review.setUseful(review.getUseful() - 1);
         reviewDbStorage.update(review);
     }
@@ -105,12 +116,12 @@ public class ReviewService {
     public void removeReviewDislike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
         userService.findById(userId);
-        if (reviewDislikeService.find(userId, reviewId).isEmpty()) {
+        ReviewDislike reviewDislike = reviewDislikeService.find(userId, reviewId).orElse(null);
+        if (Objects.isNull(reviewDislike)) {
             throw new DataIntegrityViolationException("Нельзя убрать дизлайк, если раньше его не ставили");
         }
-        reviewDislikeService.delete(userId, reviewId);
+        reviewDislikeService.delete(reviewDislike.getId());
         review.setUseful(review.getUseful() + 1);
         reviewDbStorage.update(review);
     }
-
 }

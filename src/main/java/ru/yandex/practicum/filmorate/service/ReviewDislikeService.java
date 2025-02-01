@@ -10,18 +10,17 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class ReviewDislikeService {
-
     private final ReviewDislikeDbStorage reviewDislikeDbStorage;
 
     public Optional<ReviewDislike> find(Long userId, Long reviewId) {
         return reviewDislikeDbStorage.find(userId, reviewId);
     }
 
-    void create(Long userId, Long reviewId) {
-        reviewDislikeDbStorage.create(userId, reviewId);
+    public ReviewDislike create(ReviewDislike reviewDislike) {
+        return reviewDislikeDbStorage.create(reviewDislike);
     }
 
-    void delete(Long userId, Long reviewId) {
-        reviewDislikeDbStorage.delete(userId, reviewId);
+    void delete(Long id) {
+        reviewDislikeDbStorage.delete(id);
     }
 }

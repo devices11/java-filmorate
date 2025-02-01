@@ -21,7 +21,7 @@ public class ReviewLikeDbStorageImpl extends BaseStorage<ReviewLike> implements 
             """;
 
     private static final String DELETE_QUERY = """
-            DELETE FROM filmorate.reviews_likes WHERE user_id = ? AND review_id = ?
+            DELETE FROM filmorate.reviews_likes WHERE reviews_like_id = ?
             """;
 
     public ReviewLikeDbStorageImpl(JdbcOperations jdbc, ReviewLikeRowMapper reviewLikeRowMapper) {
@@ -35,12 +35,14 @@ public class ReviewLikeDbStorageImpl extends BaseStorage<ReviewLike> implements 
     }
 
     @Override
-    public void create(Long userId, Long reviewId) {
-        insert(INSERT_QUERY, userId, reviewId);
+    public ReviewLike create(ReviewLike reviewLike) {
+        long id = insert(INSERT_QUERY, reviewLike.getUserId(), reviewLike.getReviewId());
+        reviewLike.setId(id);
+        return reviewLike;
     }
 
     @Override
-    public void delete(Long userId, Long reviewId) {
-        delete(DELETE_QUERY, userId, reviewId);
+    public void delete(Long id) {
+        delete(DELETE_QUERY, id);
     }
 }

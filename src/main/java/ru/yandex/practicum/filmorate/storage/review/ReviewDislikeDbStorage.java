@@ -7,7 +7,7 @@ import java.util.Optional;
 public interface ReviewDislikeDbStorage {
     Optional<ReviewDislike> find(Long userId, Long reviewId);
 
-    void create(Long userId, Long reviewId);
+    ReviewDislike create(ReviewDislike reviewDislike);
 
-    void delete(Long userId, Long reviewId);
+    void delete(Long id);
 }

@@ -21,7 +21,7 @@ public class ReviewDislikeDbStorageImpl extends BaseStorage<ReviewDislike> imple
             """;
 
     private static final String DELETE_QUERY = """
-            DELETE FROM filmorate.reviews_dislikes WHERE user_id = ? AND review_id = ?
+            DELETE FROM filmorate.reviews_dislikes WHERE reviews_dislike_id = ?
             """;
 
     public ReviewDislikeDbStorageImpl(JdbcOperations jdbc, ReviewDislikeRowMapper reviewDislikeRowMapper) {
@@ -35,13 +35,15 @@ public class ReviewDislikeDbStorageImpl extends BaseStorage<ReviewDislike> imple
     }
 
     @Override
-    public void create(Long userId, Long reviewId) {
-        insert(INSERT_QUERY, userId, reviewId);
+    public ReviewDislike create(ReviewDislike reviewDislike) {
+        long id = insert(INSERT_QUERY, reviewDislike.getUserId(), reviewDislike.getReviewId());
+        reviewDislike.setId(id);
+        return reviewDislike;
     }
 
     @Override
-    public void delete(Long userId, Long reviewId) {
-        delete(DELETE_QUERY, userId, reviewId);
+    public void delete(Long id) {
+        delete(DELETE_QUERY, id);
     }
 
 }

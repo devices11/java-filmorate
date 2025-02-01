@@ -7,7 +7,7 @@ import java.util.Optional;
 public interface ReviewLikeDbStorage {
     Optional<ReviewLike> find(Long userId, Long reviewId);
 
-    void create(Long userId, Long reviewId);
+    ReviewLike create(ReviewLike reviewLike);
 
-    void delete(Long userId, Long reviewId);
+    void delete(Long id);
 }
