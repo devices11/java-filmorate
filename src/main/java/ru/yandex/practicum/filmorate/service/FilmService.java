@@ -37,7 +37,7 @@ public class FilmService {
         if (query.isBlank()) {
             throw new ValidationException("Задан пустой поисковый запрос");
         }
-        List<Search> search = by.stream().map(Search::SearchOrder).toList();
+        List<Search> search = by.stream().map(Search::searchOrder).toList();
         if (search.contains(null)) {
             throw new ValidationException("некоректное имя параметра");
         }

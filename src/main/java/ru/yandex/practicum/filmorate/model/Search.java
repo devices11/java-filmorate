@@ -4,7 +4,7 @@ public enum Search {
     DIRECTOR,
     TITLE;
 
-    public static Search SearchOrder(String str) {
+    public static Search searchOrder(String str) {
         return switch (str.toLowerCase()) {
             case "director" -> DIRECTOR;
             case "title" -> TITLE;
