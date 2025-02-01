@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface FilmDbStorage {
 
-    List<Film> searchByTitleAndDirector(String query, List<Search> by);
+    List<Film> searchByFilmsAndDirectors(String query, List<Search> by);
 
     List<Film> findLikedFilmsByUserId(long userId);
 
