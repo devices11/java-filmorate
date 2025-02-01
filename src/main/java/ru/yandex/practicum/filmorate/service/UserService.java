@@ -122,7 +122,7 @@ public class UserService {
         }
     }
 
-    public void delete(long id) {
+    public void delete(Long id) {
         validateUserExistence(id);
         userStorage.deleteAllFriendshipConnections(id);
         filmStorage.deleteAllLikeByUserId(id);
