@@ -41,7 +41,22 @@ public class FilmService {
         if (search.contains(null)) {
             throw new ValidationException("некоректное имя параметра");
         }
-        return filmStorage.searchByTitleAndDirector(query, search);
+        Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
+        Map<Long, List<Director>> directorsByFilmId = directorStorage.findAllByFilms();
+        List<Film> films = filmStorage.searchByFilmsAndDirectors(query, search);
+        films.forEach(film -> {
+            film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of()));
+            film.setDirectors(directorsByFilmId.getOrDefault(film.getId(), List.of()));
+        });
+        return films.stream().sorted((o1, o2) -> {
+            if (!o1.getDirectors().isEmpty() && o2.getDirectors().isEmpty()) {
+                return 1;
+            }
+            if (o1.getDirectors().isEmpty() && !o2.getDirectors().isEmpty()) {
+                return -1;
+            }
+            return 0;
+        }).toList();
     }
 
     public Film findById(Long id) {
