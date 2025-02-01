@@ -122,7 +122,6 @@ public class UserService {
         }
     }
 
-    //TODO: Удалить оценки и удалить реакции на оценки
     public void delete(Long id) {
         validateUserExistence(id);
         userStorage.deleteAllFriendshipConnections(id);
