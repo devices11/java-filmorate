@@ -15,6 +15,7 @@ import java.util.*;
 public class UserService {
     private final UserDbStorage userStorage;
     private final FilmDbStorage filmStorage;
+    private final ReviewService reviewService;
 
     public User findById(Long id) {
         return userStorage.findById(id)
@@ -127,5 +128,6 @@ public class UserService {
         userStorage.deleteAllFriendshipConnections(id);
         filmStorage.deleteAllLikeByUserId(id);
         userStorage.delete(id);
+        reviewService.deleteAllByUserId(id);
     }
 }

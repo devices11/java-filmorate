@@ -124,4 +124,16 @@ public class ReviewService {
         review.setUseful(review.getUseful() + 1);
         reviewDbStorage.update(review);
     }
+
+    // TODO: доделать удаление при удалении пользователя
+    public void deleteAllByUserId(Long userId) {
+        // нужно дропнуть все ревью юзера и все связанные ними реакции
+        // и отдельно нужно дропнуть все реакции на отзывы, которые этот юзер оставил
+        //Collection<Review> reviews = findAllByUserId(userId);
+    }
+
+    // TODO: доделать удаление при удалении фильма
+    public void deleteAllByFilmId(Long filmId) {
+        // нужно дропнуть все отзывы фильма и связанные с ними реакции
+    }
 }

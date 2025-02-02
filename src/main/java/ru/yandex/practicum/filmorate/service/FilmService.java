@@ -19,6 +19,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class FilmService {
+    private final ReviewService reviewService;
     private final FilmDbStorage filmStorage;
     private final UserDbStorage userStorage;
     private final GenreDbStorage genreStorage;
@@ -176,10 +177,12 @@ public class FilmService {
         return film;
     }
 
+    // TODO: тут нужно доделать дроп из таблицы связи режиссеров и фильмов
     public void delete(long id) {
         findById(id);
         filmStorage.deleteAllLikeByFilmId(id);
         genreStorage.deleteConnectionByFilmId(id);
         filmStorage.delete(id);
+        reviewService.deleteAllByFilmId(id);
     }
 }
