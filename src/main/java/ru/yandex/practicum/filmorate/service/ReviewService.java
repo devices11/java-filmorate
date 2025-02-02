@@ -7,6 +7,8 @@ import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.ReviewDislike;
 import ru.yandex.practicum.filmorate.model.ReviewLike;
 import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewDislikeDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewLikeDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 
@@ -19,8 +21,8 @@ public class ReviewService {
     private final ReviewDbStorage reviewDbStorage;
     private final UserService userService;
     private final FilmService filmService;
-    private final ReviewLikeService reviewLikeService;
-    private final ReviewDislikeService reviewDislikeService;
+    private final ReviewLikeDbStorage reviewLikeDbStorage;
+    private final ReviewDislikeDbStorage reviewDislikeDbStorage;
 
     public Review findById(Long id) {
         return reviewDbStorage.findById(id)
@@ -43,6 +45,8 @@ public class ReviewService {
 
     public void delete(Long id) {
         findById(id);
+        reviewLikeDbStorage.deleteAllByReviewId(id);
+        reviewDislikeDbStorage.deleteAllByReviewId(id);
         reviewDbStorage.delete(id);
     }
 
@@ -59,17 +63,17 @@ public class ReviewService {
     public void setReviewLike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
         userService.findById(userId);
-        if (reviewLikeService.find(userId, reviewId).isPresent()) {
+        if (reviewLikeDbStorage.find(userId, reviewId).isPresent()) {
             throw new DataIntegrityViolationException("Этот пользователь уже поставил лайк этому отзыву");
         }
         ReviewLike reviewLike = ReviewLike.builder()
                 .reviewId(reviewId)
                 .userId(userId)
                 .build();
-        ReviewDislike reviewDislike = reviewDislikeService.find(userId, reviewId).orElse(null);
-        reviewLikeService.create(reviewLike);
+        ReviewDislike reviewDislike = reviewDislikeDbStorage.find(userId, reviewId).orElse(null);
+        reviewLikeDbStorage.create(reviewLike);
         if (Objects.nonNull(reviewDislike)) {
-            reviewDislikeService.delete(reviewDislike.getId());
+            reviewDislikeDbStorage.delete(reviewDislike.getId());
             review.setUseful(review.getUseful() + 2);
             reviewDbStorage.update(review);
             return;
@@ -82,17 +86,17 @@ public class ReviewService {
     public void setReviewDislike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
         userService.findById(userId);
-        if (reviewDislikeService.find(userId, reviewId).isPresent()) {
+        if (reviewDislikeDbStorage.find(userId, reviewId).isPresent()) {
             throw new DataIntegrityViolationException("Этот пользователь уже поставил дизлайк этому отзыву");
         }
         ReviewDislike reviewDislike = ReviewDislike.builder()
                 .reviewId(reviewId)
                 .userId(userId)
                 .build();
-        ReviewLike reviewLike = reviewLikeService.find(userId, reviewId).orElse(null);
-        reviewDislikeService.create(reviewDislike);
+        ReviewLike reviewLike = reviewLikeDbStorage.find(userId, reviewId).orElse(null);
+        reviewDislikeDbStorage.create(reviewDislike);
         if (Objects.nonNull(reviewLike)) {
-            reviewLikeService.delete(reviewLike.getId());
+            reviewLikeDbStorage.delete(reviewLike.getId());
             review.setUseful(review.getUseful() - 2);
             reviewDbStorage.update(review);
             return;
@@ -104,11 +108,11 @@ public class ReviewService {
     public void removeReviewLike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
         userService.findById(userId);
-        ReviewLike reviewLike = reviewLikeService.find(userId, reviewId).orElse(null);
+        ReviewLike reviewLike = reviewLikeDbStorage.find(userId, reviewId).orElse(null);
         if (Objects.isNull(reviewLike)) {
             throw new DataIntegrityViolationException("Нельзя убрать лайк, если раньше его не ставили");
         }
-        reviewLikeService.delete(reviewLike.getId());
+        reviewLikeDbStorage.delete(reviewLike.getId());
         review.setUseful(review.getUseful() - 1);
         reviewDbStorage.update(review);
     }
@@ -116,11 +120,11 @@ public class ReviewService {
     public void removeReviewDislike(Long reviewId, Long userId) {
         Review review = findById(reviewId);
         userService.findById(userId);
-        ReviewDislike reviewDislike = reviewDislikeService.find(userId, reviewId).orElse(null);
+        ReviewDislike reviewDislike = reviewDislikeDbStorage.find(userId, reviewId).orElse(null);
         if (Objects.isNull(reviewDislike)) {
             throw new DataIntegrityViolationException("Нельзя убрать дизлайк, если раньше его не ставили");
         }
-        reviewDislikeService.delete(reviewDislike.getId());
+        reviewDislikeDbStorage.delete(reviewDislike.getId());
         review.setUseful(review.getUseful() + 1);
         reviewDbStorage.update(review);
     }
