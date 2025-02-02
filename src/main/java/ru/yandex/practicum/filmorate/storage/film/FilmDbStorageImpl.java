@@ -111,13 +111,13 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
             ORDER BY f.RELEASE_DATE
             """;
     private static final String FIND_FILMS_BY_DIRECTOR_ID_ORDER_BY_LIKES_QUERY = """
-            SELECT f.*, m."name" AS mpa_name, COUNT(l.FILM_ID) AS COUNT_LIKES
+            SELECT f.*, m."name" AS mpa_name, COALESCE(COUNT(l.FILM_ID), 0) AS count_likes
             FROM filmorate.FILMS f
             JOIN filmorate.FILM_DIRECTORS fd ON f.FILM_ID = fd.FILM_ID
             JOIN filmorate.MPA m ON f.MPA_ID = m.id
-            JOIN filmorate.LIKES l ON f.FILM_ID = l.FILM_ID
+            LEFT JOIN filmorate.LIKES l ON f.FILM_ID = l.FILM_ID
             WHERE fd.DIRECTOR_ID = ?
-            GROUP BY l.FILM_ID
+            GROUP BY f.FILM_ID, m."name"
             ORDER BY COUNT_LIKES DESC
             """;
 
@@ -235,9 +235,9 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     }
 
     private void updateDirector(Film film) {
-        if (film.getDirectors() != null) {
-            delete(DELETE_FILM_DIRECTOR_QUERY, film.getId());
+        delete(DELETE_FILM_DIRECTOR_QUERY, film.getId());
 
+        if (film.getDirectors() != null) {
             List<Object[]> batchArgs = film.getDirectors().stream()
                     .distinct()
                     .map(director -> new Object[]{director.getId(), film.getId()})
