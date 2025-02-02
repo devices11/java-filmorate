@@ -2,8 +2,14 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.ReviewDislike;
+import ru.yandex.practicum.filmorate.model.ReviewLike;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewDislikeDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewLikeDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
@@ -15,6 +21,9 @@ import java.util.*;
 public class UserService {
     private final UserDbStorage userStorage;
     private final FilmDbStorage filmStorage;
+    private final ReviewDbStorage reviewDbStorage;
+    private final ReviewLikeDbStorage reviewLikeDbStorage;
+    private final ReviewDislikeDbStorage reviewDislikeDbStorage;
 
     public User findById(Long id) {
         return userStorage.findById(id)
@@ -126,6 +135,36 @@ public class UserService {
         validateUserExistence(id);
         userStorage.deleteAllFriendshipConnections(id);
         filmStorage.deleteAllLikeByUserId(id);
+        deleteAllUserReviewsAndUserLikes(id);
         userStorage.delete(id);
+    }
+
+    private void deleteAllUserReviewsAndUserLikes(Long id) {
+        Collection<Review> userReviews = reviewDbStorage.findReviewsByUserId(id);
+        if (userReviews.isEmpty()) {
+            return;
+        }
+        for (Review userReview : userReviews) {
+            reviewLikeDbStorage.deleteAllByReviewId(userReview.getReviewId());
+            reviewDislikeDbStorage.deleteAllByReviewId(userReview.getReviewId());
+        }
+        Collection<ReviewLike> likes = reviewLikeDbStorage.findAllByUserId(id);
+        for (ReviewLike like : likes) {
+            Review review = reviewDbStorage.findById(like.getReviewId()).orElse(null);
+            if (Objects.isNull(review))
+                continue;
+            review.setUseful(review.getUseful() - 1);
+            reviewDbStorage.update(review);
+            reviewLikeDbStorage.delete(like.getId());
+        }
+        Collection<ReviewDislike> dislikes = reviewDislikeDbStorage.findAllByUserId(id);
+        for (ReviewDislike dislike : dislikes) {
+            Review review = reviewDbStorage.findById(dislike.getReviewId()).orElse(null);
+            if (Objects.isNull(review))
+                continue;
+            review.setUseful(review.getUseful() + 1);
+            reviewDbStorage.update(review);
+            reviewDislikeDbStorage.delete(dislike.getId());
+        }
     }
 }

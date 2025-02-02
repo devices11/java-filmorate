@@ -21,4 +21,8 @@ public interface DirectorDbStorage {
     Collection<Director> findAllByFilmId(long id);
 
     Map<Long, List<Director>> findAllByFilms();
+
+    void deleteConnectionByFilmId(long id);
+
+    void deleteConnectionById(long id);
 }

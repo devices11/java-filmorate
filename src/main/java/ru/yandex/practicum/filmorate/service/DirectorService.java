@@ -41,6 +41,8 @@ public class DirectorService {
     }
 
     public void delete(Integer id) {
-        directorStorage.delete(findById(id).getId());
+        findById(id);
+        directorStorage.deleteConnectionById(id);
+        directorStorage.delete(id);
     }
 }
