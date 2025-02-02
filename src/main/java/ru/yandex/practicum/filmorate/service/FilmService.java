@@ -37,13 +37,14 @@ public class FilmService {
         if (query.isBlank()) {
             throw new ValidationException("Задан пустой поисковый запрос");
         }
-        List<Search> search = by.stream().map(Search::searchOrder).toList();
-        if (search.contains(null)) {
-            throw new ValidationException("некоректное имя параметра");
+        boolean paramsCheck = by.stream().limit(2)
+                .allMatch(searchBy -> searchBy.equals("title") || searchBy.equals("director"));
+        if (!paramsCheck) {
+            throw new ValidationException("указан неправильный параметр запроса");
         }
         Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
         Map<Long, List<Director>> directorsByFilmId = directorStorage.findAllByFilms();
-        List<Film> films = filmStorage.searchByFilmsAndDirectors(query, search);
+        List<Film> films = filmStorage.searchByFilmsAndDirectors(query, by);
         films.forEach(film -> {
             film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of()));
             film.setDirectors(directorsByFilmId.getOrDefault(film.getId(), List.of()));
