@@ -86,9 +86,7 @@ public class FilmService {
         if (film.getGenres() != null) {
             updatedFilm.setGenres(film.getGenres());
         }
-        if (film.getDirectors() != null) {
-            updatedFilm.setDirectors(film.getDirectors());
-        }
+        updatedFilm.setDirectors(film.getDirectors());
         Film filmDb = filmStorage.update(updatedFilm);
         filmDb.setMpa(mpaStorage.findById(filmDb.getMpa().getId()).get());
         filmDb.setGenres(genreStorage.findAllByFilmId(filmDb.getId()));
