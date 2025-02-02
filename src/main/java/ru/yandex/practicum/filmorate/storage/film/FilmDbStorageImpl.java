@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage.film;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Search;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
@@ -81,54 +80,21 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
                     WHERE user_id = ?))
             ORDER BY like_count DESC
             """;
-    private static final String FIND_FILMS_BY_DIRECTOR_QUERY = """
-            SELECT DISTINCT f.*, m."name" AS mpa_name, COALESCE(likes.like_count, 0) AS like_count
-            FROM filmorate.films f
-            JOIN filmorate.MPA m ON f.MPA_ID = m.id
-            LEFT JOIN (
-                SELECT l.FILM_ID, COUNT(*) AS like_count
-                FROM filmorate.likes l
-                GROUP BY l.FILM_ID
-            ) likes ON f.film_id = likes.FILM_ID
-            JOIN filmorate.FILM_DIRECTORS fd ON fd.film_id = f.film_id
-            JOIN filmorate.DIRECTORS AS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID
-            WHERE d."name" LIKE ?
-            ORDER BY like_count DESC
-            """;
-    private static final String FIND_FILMS_BY_TITLE_QUERY = """
-            SELECT DISTINCT f.*, m."name" AS mpa_name, COALESCE(likes.like_count, 0) AS like_count
-            FROM filmorate.films f
-            JOIN filmorate.MPA m ON f.MPA_ID = m.id
-            LEFT JOIN (
-                SELECT l.FILM_ID, COUNT(*) AS like_count
-                FROM filmorate.likes l
-                GROUP BY l.FILM_ID
-            ) likes ON f.film_id = likes.FILM_ID
-            WHERE f."name" LIKE ?
-            ORDER BY like_count DESC
-            """;
     private static final String FIND_FILMS_BY_DIRECTOR_AND_FILM_NAME_QUERY = """
             SELECT DISTINCT f.*, m."name" AS mpa_name, COALESCE(likes.like_count, 0) AS like_count
             FROM filmorate.films f
             JOIN filmorate.MPA m ON f.MPA_ID = m.id
             LEFT JOIN (
-                SELECT l.FILM_ID, COUNT(*) AS like_count
-                FROM filmorate.likes l
-                GROUP BY l.FILM_ID
+                 SELECT l.FILM_ID, COUNT(*) AS like_count
+                 FROM filmorate.likes l
+                 GROUP BY l.FILM_ID
             ) likes ON f.film_id = likes.FILM_ID
-            JOIN filmorate.FILM_DIRECTORS fd ON fd.film_id = f.film_id
-            JOIN filmorate.DIRECTORS AS d ON fd.DIRECTOR_ID = d.DIRECTOR_ID
-            WHERE d."name" LIKE ?
-            UNION ALL
-            SELECT DISTINCT f.*, m."name" AS mpa_name, COALESCE(likes.like_count, 0) AS like_count
-            FROM filmorate.films f
-            JOIN filmorate.MPA m ON f.MPA_ID = m.id
-            LEFT JOIN (
-                SELECT l.FILM_ID, COUNT(*) AS like_count
-                FROM filmorate.likes l
-                GROUP BY l.FILM_ID
-            ) likes ON f.film_id = likes.FILM_ID
-            WHERE f."name" LIKE ?
+            WHERE f."name" LIKE ? OR f.FILM_ID IN (
+                    SELECT FILM_ID
+                    FROM filmorate.FILM_DIRECTORS fd2
+                    WHERE DIRECTOR_ID IN (SELECT d2.DIRECTOR_ID
+                                        FROM filmorate.DIRECTORS d2
+                                        WHERE d2."name" LIKE ?))
             ORDER BY like_count DESC
             """;
     private static final String INSERT_FILM_LIKE_QUERY = """
@@ -176,17 +142,10 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     }
 
     @Override
-    public List<Film> searchByFilmsAndDirectors(String query, List<Search> by) {
-        String param = "%" + query + "%";
-        Set<Film> films = new HashSet<>();
-        if (by.size() == 2 && by.contains(Search.TITLE) && by.contains(Search.DIRECTOR)) {
-            films.addAll(findMany(filmRowMapper, FIND_FILMS_BY_DIRECTOR_AND_FILM_NAME_QUERY, param, param));
-        } else if (by.size() == 1 && by.contains(Search.TITLE)) {
-            films.addAll(findMany(filmRowMapper, FIND_FILMS_BY_TITLE_QUERY, param));
-        } else if (by.size() == 1 && by.contains(Search.DIRECTOR)) {
-            films.addAll(findMany(filmRowMapper, FIND_FILMS_BY_DIRECTOR_QUERY, param));
-        }
-        return new ArrayList<>(films);
+    public List<Film> searchByFilmsAndDirectors(String query, List<String> by) {
+        String searchTitle = by.contains("title") ? "%" + query + "%" : null;
+        String searchDirector = by.contains("director") ? "%" + query + "%" : null;
+        return findMany(filmRowMapper, FIND_FILMS_BY_DIRECTOR_AND_FILM_NAME_QUERY, searchTitle, searchDirector);
     }
 
     @Override

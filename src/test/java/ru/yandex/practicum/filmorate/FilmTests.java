@@ -14,7 +14,6 @@ import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -501,30 +500,43 @@ public class FilmTests {
                 .andExpect(jsonPath("$[0].name").value("Самый худший фильм"));
     }
 
+    @DisplayName("GET /films/search. Поиск фильмов без режисера, по названию и имени режисера")
+    @Test
+    public void searchFilmsByTitleAndDirectorNotFoundDirector() throws Exception {
+        film.setName("John Wick 0");
+        film.setDirectors(List.of());
+        mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(film)));
+        mockMvc.perform(get("/films/search?query=John&by=title,director").contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("John Wick 0"));
+    }
+
     @DisplayName("GET /films/search. Поиск фильмов по имени режисера")
     @Test
     public void searchFilmsByDirectors() throws Exception {
         mockMvc.perform(get("/films/search?query=Пупкин&by=director").contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0].name").value("Доспехи бога 1"));
+                .andExpect(jsonPath("$[0].name").value("Доспехи бога 3"))
+                .andExpect(jsonPath("$[1].name").value("Доспехи бога 2"))
+                .andExpect(jsonPath("$[2].name").value("Доспехи бога 1"));
     }
 
     @DisplayName("GET /films/search. Поиск фильмов по названию и имени режисера")
     @Test
     public void searchFilmsByTitleAndDirector() throws Exception {
-        film.setName("Самый лучший фильм");
-        Collection<Director> directors = film.getDirectors()
-                .stream()
-                .peek(director -> director.setName("Самый"))
-                .toList();
-        film.setDirectors(directors);
+        film.setName("Самый лучший фильм от Петрова");
+        Director director = Director.builder()
+                .id(2)
+                .build();
+        film.setDirectors(List.of(director));
         mockMvc.perform(post("/films").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(film)));
-        mockMvc.perform(get("/films/search?query=амый&by=title,director").contentType("application/json"))
+        mockMvc.perform(get("/films/search?query=Петр&by=title,director").contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].name").value("Самый лучший фильм"));
+                .andExpect(jsonPath("$[0].name").value("Самый лучший фильм от Петрова"));
     }
 
     @DisplayName("GET /films/search. Поиск фильмов по имени режисера, отправлен пустой запрос")
