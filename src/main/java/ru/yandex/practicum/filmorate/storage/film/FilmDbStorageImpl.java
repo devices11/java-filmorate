@@ -235,8 +235,8 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     }
 
     public boolean isLikeExists(long filmId, long userId) {
-        Integer count = jdbc.queryForObject(FIND_LIKE_BY_FILM_ID_QUERY, Integer.class, filmId, userId); //
-        return count != null && count > 0;
+        List<Integer> countList = jdbc.query(FIND_LIKE_BY_FILM_ID_QUERY, (rs, rowNum) -> rs.getInt(1), filmId, userId);
+        return !countList.isEmpty() && countList.get(0) > 0;
     }
 
     private void updateDirector(Film film) {
