@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.review;
 
 import ru.yandex.practicum.filmorate.model.ReviewDislike;
 
+import java.util.Collection;
 import java.util.Optional;
 
 public interface ReviewDislikeDbStorage {
@@ -10,4 +11,10 @@ public interface ReviewDislikeDbStorage {
     ReviewDislike create(ReviewDislike reviewDislike);
 
     void delete(Long id);
+
+    void deleteAllByFilmId(Long filmId);
+
+    void deleteAllByReviewId(Long reviewId);
+
+    Collection<ReviewDislike> findAllByUserId(Long userId);
 }

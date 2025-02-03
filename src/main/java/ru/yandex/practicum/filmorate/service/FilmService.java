@@ -10,6 +10,9 @@ import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewDislikeDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewLikeDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
@@ -19,12 +22,14 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class FilmService {
-    private final ReviewService reviewService;
     private final FilmDbStorage filmStorage;
     private final UserDbStorage userStorage;
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
     private final DirectorDbStorage directorStorage;
+    private final ReviewDbStorage reviewDbStorage;
+    private final ReviewLikeDbStorage reviewLikeDbStorage;
+    private final ReviewDislikeDbStorage reviewDislikeDbStorage;
 
     public List<Film> findCommonFilms(long userId, long friendId) {
         checkUser(userId);
@@ -175,12 +180,14 @@ public class FilmService {
         return film;
     }
 
-    // TODO: тут нужно доделать дроп из таблицы связи режиссеров и фильмов
     public void delete(long id) {
         findById(id);
         filmStorage.deleteAllLikeByFilmId(id);
         genreStorage.deleteConnectionByFilmId(id);
+        directorStorage.deleteConnectionByFilmId(id);
+        reviewLikeDbStorage.deleteAllByFilmId(id);
+        reviewDislikeDbStorage.deleteAllByFilmId(id);
+        reviewDbStorage.deleteAllByFilmId(id);
         filmStorage.delete(id);
-        reviewService.deleteAllByFilmId(id);
     }
 }

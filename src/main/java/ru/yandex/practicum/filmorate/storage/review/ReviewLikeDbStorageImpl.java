@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.model.ReviewLike;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.ReviewLikeRowMapper;
 
+import java.util.Collection;
 import java.util.Optional;
 
 @Repository
@@ -16,8 +17,21 @@ public class ReviewLikeDbStorageImpl extends BaseStorage<ReviewLike> implements 
             SELECT * FROM filmorate.reviews_likes WHERE user_id = ? AND review_id = ?
             """;
 
+    private static final String FIND_REVIEWS_LIKES_BY_USER_QUERY = """
+            SELECT * FROM filmorate.reviews_likes WHERE user_id = ?
+            """;
+
     private static final String INSERT_QUERY = """
             INSERT INTO filmorate.reviews_likes (user_id, review_id) VALUES (?, ?)
+            """;
+
+    private static final String DELETE_ALL_BY_FILM_QUERY = """
+            DELETE FROM filmorate.reviews_likes
+            WHERE review_id IN (SELECT review_id FROM filmorate.reviews WHERE film_id = ?);
+            """;
+
+    private static final String DELETE_ALL_BY_REVIEW_QUERY = """
+            DELETE FROM filmorate.reviews_likes WHERE review_id = ?
             """;
 
     private static final String DELETE_QUERY = """
@@ -45,4 +59,20 @@ public class ReviewLikeDbStorageImpl extends BaseStorage<ReviewLike> implements 
     public void delete(Long id) {
         delete(DELETE_QUERY, id);
     }
+
+    @Override
+    public void deleteAllByFilmId(Long filmId) {
+        delete(DELETE_ALL_BY_FILM_QUERY, filmId);
+    }
+
+    @Override
+    public void deleteAllByReviewId(Long reviewId) {
+        delete(DELETE_ALL_BY_REVIEW_QUERY, reviewId);
+    }
+
+    @Override
+    public Collection<ReviewLike> findAllByUserId(Long userId) {
+        return findMany(reviewLikeRowMapper, FIND_REVIEWS_LIKES_BY_USER_QUERY, userId);
+    }
+
 }
