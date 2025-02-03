@@ -44,21 +44,16 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
     private static final String DELETE_ALL_USER_REVIEWS_AND_LIKES_QUERY = """
             DELETE FROM filmorate.reviews_likes
             WHERE review_id IN (SELECT review_id FROM filmorate.reviews WHERE user_id = ?);
-            
             DELETE FROM filmorate.reviews_dislikes
             WHERE review_id IN (SELECT review_id FROM filmorate.reviews WHERE user_id = ?);
-            
             DELETE FROM filmorate.reviews
             WHERE user_id = ?;
-            
             UPDATE filmorate.reviews
             SET useful = useful - 1
             WHERE review_id IN (SELECT review_id FROM filmorate.reviews_likes WHERE user_id = ?);
-            
             UPDATE filmorate.reviews
             SET useful = useful + 1
             WHERE review_id IN (SELECT review_id FROM filmorate.reviews_dislikes WHERE user_id = ?);
-            
             DELETE FROM filmorate.reviews_likes WHERE user_id = ?;
             DELETE FROM filmorate.reviews_dislikes WHERE user_id = ?;
             """;
