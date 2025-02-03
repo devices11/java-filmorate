@@ -5,13 +5,16 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.EventRowMapper;
+import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 
 import java.util.List;
 
 @Repository
 public class EventDbStorageImpl extends BaseStorage<Event> implements EventDbStorage {
     private final EventRowMapper eventRowMapper;
+    private final UserDbStorage userDbStorage;
 
     private static final String FIND_ALL_BY_USER_ID_QUERY = "SELECT * FROM filmorate.events WHERE user_id = ?";
     private static final String INSERT_QUERY = """
@@ -23,9 +26,10 @@ public class EventDbStorageImpl extends BaseStorage<Event> implements EventDbSto
             VALUES (?, ?, ?, ?)""";
 
 
-    public EventDbStorageImpl(JdbcOperations jdbc, EventRowMapper eventRowMapper) {
+    public EventDbStorageImpl(JdbcOperations jdbc, EventRowMapper eventRowMapper, UserDbStorage userDbStorage) {
         super(jdbc);
         this.eventRowMapper = eventRowMapper;
+        this.userDbStorage = userDbStorage;
     }
 
     @Override
@@ -40,6 +44,8 @@ public class EventDbStorageImpl extends BaseStorage<Event> implements EventDbSto
 
     @Override
     public List<Event> findAllEventsByUserId(Long id) {
+        userDbStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь с указанным id не найден, id=" + id));
         return jdbc.query(FIND_ALL_BY_USER_ID_QUERY, eventRowMapper, id);
     }
 }
