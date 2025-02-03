@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewDislikeDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewLikeDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
@@ -17,6 +19,8 @@ public class UserService {
     private final UserDbStorage userStorage;
     private final FilmDbStorage filmStorage;
     private final ReviewDbStorage reviewDbStorage;
+    private final ReviewLikeDbStorage reviewLikeDbStorage;
+    private final ReviewDislikeDbStorage reviewDislikeDbStorage;
 
     public User findById(Long id) {
         return userStorage.findById(id)
@@ -128,7 +132,14 @@ public class UserService {
         validateUserExistence(id);
         userStorage.deleteAllFriendshipConnections(id);
         filmStorage.deleteAllLikeByUserId(id);
-        reviewDbStorage.deleteAllUserReviewsAndUserLikesByUserId(id);
+        int affectedByLikes = reviewDbStorage.updateUsefulByLikesByUserIdForDelete(id);
+        int affectedByDislikes = reviewDbStorage.updateUsefulByDislikesByUserIdForDelete(id);
+        if (affectedByLikes > 0) {
+            reviewLikeDbStorage.deleteAllByUserId(id);
+        }
+        if (affectedByDislikes > 0) {
+            reviewDislikeDbStorage.deleteAllByUserId(id);
+        }
         userStorage.delete(id);
     }
 }

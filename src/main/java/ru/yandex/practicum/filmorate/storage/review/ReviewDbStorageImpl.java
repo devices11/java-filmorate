@@ -37,25 +37,16 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
             DELETE FROM FILMORATE.reviews WHERE review_id = ?
             """;
 
-    private static final String DELETE_ALL_BY_FILM_QUERY = """
-            DELETE FROM filmorate.reviews WHERE film_id = ?;
+    private static final String UPDATE_USEFUL_BY_LIKES_FOR_DELETE_USER_QUERY = """
+            UPDATE filmorate.reviews
+                SET useful = useful - 1
+                WHERE review_id IN (SELECT review_id FROM filmorate.reviews_likes WHERE user_id = ?)
             """;
 
-    private static final String DELETE_ALL_USER_REVIEWS_AND_LIKES_QUERY = """
-            DELETE FROM filmorate.reviews_likes
-            WHERE review_id IN (SELECT review_id FROM filmorate.reviews WHERE user_id = ?);
-            DELETE FROM filmorate.reviews_dislikes
-            WHERE review_id IN (SELECT review_id FROM filmorate.reviews WHERE user_id = ?);
-            DELETE FROM filmorate.reviews
-            WHERE user_id = ?;
+    private static final String UPDATE_USEFUL_BY_DISLIKES_FOR_DELETE_USER_QUERY = """
             UPDATE filmorate.reviews
-            SET useful = useful - 1
-            WHERE review_id IN (SELECT review_id FROM filmorate.reviews_likes WHERE user_id = ?);
-            UPDATE filmorate.reviews
-            SET useful = useful + 1
-            WHERE review_id IN (SELECT review_id FROM filmorate.reviews_dislikes WHERE user_id = ?);
-            DELETE FROM filmorate.reviews_likes WHERE user_id = ?;
-            DELETE FROM filmorate.reviews_dislikes WHERE user_id = ?;
+                SET useful = useful + 1
+                WHERE review_id IN (SELECT review_id FROM filmorate.reviews_dislikes WHERE user_id = ?)
             """;
 
     public ReviewDbStorageImpl(JdbcOperations jdbc, ReviewRowMapper reviewRowMapper) {
@@ -103,12 +94,12 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
     }
 
     @Override
-    public void deleteAllByFilmId(Long filmId) {
-        delete(DELETE_ALL_BY_FILM_QUERY, filmId);
+    public Integer updateUsefulByLikesByUserIdForDelete(Long id) {
+        return update(UPDATE_USEFUL_BY_LIKES_FOR_DELETE_USER_QUERY, id);
     }
 
     @Override
-    public void deleteAllUserReviewsAndUserLikesByUserId(Long id) {
-        delete(DELETE_ALL_USER_REVIEWS_AND_LIKES_QUERY, id, id, id, id, id, id, id);
+    public Integer updateUsefulByDislikesByUserIdForDelete(Long id) {
+        return update(UPDATE_USEFUL_BY_DISLIKES_FOR_DELETE_USER_QUERY, id);
     }
 }

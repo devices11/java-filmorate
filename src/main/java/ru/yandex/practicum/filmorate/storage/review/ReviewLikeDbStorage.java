@@ -14,4 +14,6 @@ public interface ReviewLikeDbStorage {
     void deleteAllByFilmId(Long filmId);
 
     void deleteAllByReviewId(Long reviewId);
+
+    void deleteAllByUserId(Long userId);
 }

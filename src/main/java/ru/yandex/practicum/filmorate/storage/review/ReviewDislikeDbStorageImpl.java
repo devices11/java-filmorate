@@ -26,11 +26,15 @@ public class ReviewDislikeDbStorageImpl extends BaseStorage<ReviewDislike> imple
 
     private static final String DELETE_ALL_BY_FILM_QUERY = """
             DELETE FROM filmorate.reviews_dislikes
-            WHERE review_id IN (SELECT review_id FROM filmorate.reviews WHERE film_id = ?);
+            WHERE review_id IN (SELECT review_id FROM filmorate.reviews WHERE film_id = ?)
             """;
 
     private static final String DELETE_ALL_BY_REVIEW_QUERY = """
             DELETE FROM filmorate.reviews_dislikes WHERE review_id = ?
+            """;
+
+    private static final String DELETE_ALL_BY_USER_ID = """
+            DELETE FROM filmorate.reviews_dislikes WHERE user_id = ?
             """;
 
     public ReviewDislikeDbStorageImpl(JdbcOperations jdbc, ReviewDislikeRowMapper reviewDislikeRowMapper) {
@@ -63,5 +67,10 @@ public class ReviewDislikeDbStorageImpl extends BaseStorage<ReviewDislike> imple
     @Override
     public void deleteAllByReviewId(Long reviewId) {
         delete(DELETE_ALL_BY_REVIEW_QUERY, reviewId);
+    }
+
+    @Override
+    public void deleteAllByUserId(Long id) {
+        delete(DELETE_ALL_BY_USER_ID, id);
     }
 }

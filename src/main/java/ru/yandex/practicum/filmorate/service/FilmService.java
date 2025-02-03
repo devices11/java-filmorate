@@ -27,7 +27,6 @@ public class FilmService {
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
     private final DirectorDbStorage directorStorage;
-    private final ReviewDbStorage reviewDbStorage;
     private final ReviewLikeDbStorage reviewLikeDbStorage;
     private final ReviewDislikeDbStorage reviewDislikeDbStorage;
 
@@ -187,7 +186,6 @@ public class FilmService {
         directorStorage.deleteConnectionByFilmId(id);
         reviewLikeDbStorage.deleteAllByFilmId(id);
         reviewDislikeDbStorage.deleteAllByFilmId(id);
-        reviewDbStorage.deleteAllByFilmId(id);
         filmStorage.delete(id);
     }
 }
