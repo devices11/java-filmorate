@@ -34,9 +34,9 @@ public class ReviewService {
         filmService.findById(review.getFilmId());
         userService.findById(review.getUserId());
         Review resultReview = reviewDbStorage.create(review);
-        try{
+        try {
             eventService.addEvent(review.getUserId().intValue(), Event.EventType.REVIEW, Event.Operation.ADD, review.getReviewId().intValue());
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Проблема при создании ревью");
         }
@@ -47,10 +47,10 @@ public class ReviewService {
         Review reviewFromStorage = findById(review.getReviewId());
         reviewFromStorage.setContent(review.getContent());
         reviewFromStorage.setIsPositive(review.getIsPositive());
-        Review resultReview =reviewDbStorage.update(reviewFromStorage);
-        try{
+        Review resultReview = reviewDbStorage.update(reviewFromStorage);
+        try {
             eventService.addEvent(review.getUserId().intValue(), Event.EventType.REVIEW, Event.Operation.UPDATE, review.getReviewId().intValue());
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Проблема в обновлении ревью");
         }
@@ -60,7 +60,7 @@ public class ReviewService {
 
     public void delete(Long id) {
         findById(id);
-        try{
+        try {
             eventService.addEvent(findById(id).getUserId().intValue(), Event.EventType.REVIEW, Event.Operation.REMOVE, findById(id).getReviewId().intValue());
         } catch (Exception e) {
             e.printStackTrace();

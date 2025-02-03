@@ -6,5 +6,6 @@ import java.util.Collection;
 
 public interface EventDbStorage {
     Collection<Event> findAllEventsByUserId(Long id);
+
     void addEvent(Integer userId, Event.EventType eventType, Event.Operation operation, Integer entityId);
 }

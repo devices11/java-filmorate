@@ -10,7 +10,10 @@ import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -73,9 +76,9 @@ public class UserService {
         if (isRequestPending) {
             userStorage.updateFriend(true, friendId, userId);
         }
-        try{
+        try {
             eventStorage.addEvent(userId.intValue(), Event.EventType.FRIEND, Event.Operation.ADD, friendId.intValue());
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Проблема в добавлении друга");
         }
@@ -87,9 +90,9 @@ public class UserService {
         if (getFriendForUser(userId, friendId).isPresent()) {
             userStorage.deleteFriend(userId, friendId);
         }
-        try{
+        try {
             eventStorage.addEvent(userId.intValue(), Event.EventType.FRIEND, Event.Operation.REMOVE, friendId.intValue());
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Проблема в удалении дурга");
         }

@@ -12,7 +12,9 @@ import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -96,9 +98,9 @@ public class FilmService {
     public void setLike(Long filmId, Long userId) {
         findById(filmId);
         checkUser(userId);
-        try{
+        try {
             eventStorage.addEvent(userId.intValue(), Event.EventType.LIKE, Event.Operation.ADD, filmId.intValue());
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Проблема в добавлении лайка");
         }
@@ -109,9 +111,9 @@ public class FilmService {
     public void deleteLike(Long filmId, Long userId) {
         findById(filmId);
         checkUser(userId);
-        try{
-            eventStorage.addEvent(userId.intValue(), Event.EventType.LIKE, Event.Operation.REMOVE,filmId.intValue());
-        }catch (Exception e) {
+        try {
+            eventStorage.addEvent(userId.intValue(), Event.EventType.LIKE, Event.Operation.REMOVE, filmId.intValue());
+        } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Проблема в удалении лайка");
         }

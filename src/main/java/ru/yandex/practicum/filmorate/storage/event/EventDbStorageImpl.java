@@ -4,11 +4,9 @@ import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
-import ru.yandex.practicum.filmorate.storage.mappers.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.EventRowMapper;
 import ru.yandex.practicum.filmorate.util.exception.InternalServerException;
 
-import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -37,7 +35,7 @@ public class EventDbStorageImpl extends BaseStorage<Event> implements EventDbSto
                 eventType.toString(),
                 operation.toString(),
                 entityId);
-        if (updatedRows == 0 ) throw new InternalServerException("Произошла ошибка создания события");
+        if (updatedRows == 0) throw new InternalServerException("Произошла ошибка создания события");
     }
 
     @Override

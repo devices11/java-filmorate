@@ -13,11 +13,11 @@ import java.util.List;
 public class EventService {
     private final EventDbStorage storage;
 
-    public void addEvent(Integer userId, Event.EventType eventType, Event.Operation operation, Integer entityId){
+    public void addEvent(Integer userId, Event.EventType eventType, Event.Operation operation, Integer entityId) {
         storage.addEvent(userId, eventType, operation, entityId);
     }
 
-    public List<Event> findAllEventsByUserId(Long id){
+    public List<Event> findAllEventsByUserId(Long id) {
         return (List<Event>) storage.findAllEventsByUserId(id);
     }
 }

@@ -18,6 +18,7 @@ public class Event {
         REVIEW,
         FRIEND
     }
+
     public enum Operation {
         REMOVE,
         ADD,
