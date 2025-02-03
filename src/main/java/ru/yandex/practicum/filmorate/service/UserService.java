@@ -128,11 +128,7 @@ public class UserService {
         validateUserExistence(id);
         userStorage.deleteAllFriendshipConnections(id);
         filmStorage.deleteAllLikeByUserId(id);
-        deleteAllUserReviewsAndUserLikes(id);
-        userStorage.delete(id);
-    }
-
-    private void deleteAllUserReviewsAndUserLikes(Long id) {
         reviewDbStorage.deleteAllUserReviewsAndUserLikesByUserId(id);
+        userStorage.delete(id);
     }
 }
