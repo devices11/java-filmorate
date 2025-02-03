@@ -23,6 +23,10 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
             ORDER BY useful DESC LIMIT ?
             """;
 
+    private static final String FIND_REVIEWS_BY_USER_QUERY = """
+            SELECT * FROM filmorate.reviews WHERE user_id = ?
+            """;
+
     private static final String INSERT_QUERY = """
             INSERT INTO filmorate.reviews(content, film_id, user_id, is_positive, useful)
             VALUES (?, ?, ?, ?, ?)
@@ -35,6 +39,10 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
 
     private static final String DELETE_QUERY = """
             DELETE FROM FILMORATE.reviews WHERE review_id = ?
+            """;
+
+    private static final String DELETE_ALL_BY_FILM_QUERY = """
+            DELETE FROM filmorate.reviews WHERE film_id = ?;
             """;
 
     public ReviewDbStorageImpl(JdbcOperations jdbc, ReviewRowMapper reviewRowMapper) {
@@ -79,5 +87,15 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
     @Override
     public void delete(Long id) {
         delete(DELETE_QUERY, id);
+    }
+
+    @Override
+    public void deleteAllByFilmId(Long filmId) {
+        delete(DELETE_ALL_BY_FILM_QUERY, filmId);
+    }
+
+    @Override
+    public Collection<Review> findReviewsByUserId(Long userId) {
+        return findMany(reviewRowMapper, FIND_REVIEWS_BY_USER_QUERY, userId);
     }
 }

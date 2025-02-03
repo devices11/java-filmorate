@@ -39,6 +39,12 @@ public class DirectorDbStorageImpl extends BaseStorage<Director> implements Dire
             DELETE FROM filmorate.directors
             WHERE DIRECTOR_ID = ?
             """;
+    private static final String DELETE_CONNECTION_BY_FILM_ID_QUERY = """
+            DELETE FROM filmorate.film_directors WHERE film_id = ?;
+            """;
+    private static final String DELETE_CONNECTION_BY_ID_QUERY = """
+            DELETE FROM filmorate.film_directors WHERE director_id = ?;
+            """;
     private static final String FIND_ALL_BY_FILMS = """
                 SELECT fd.film_id, d.*
                 FROM filmorate.film_directors fd
@@ -104,5 +110,15 @@ public class DirectorDbStorageImpl extends BaseStorage<Director> implements Dire
                                 .build(), Collectors.toList())
                 )
         );
+    }
+
+    @Override
+    public void deleteConnectionByFilmId(long id) {
+        delete(DELETE_CONNECTION_BY_FILM_ID_QUERY, id);
+    }
+
+    @Override
+    public void deleteConnectionById(long id) {
+        delete(DELETE_CONNECTION_BY_ID_QUERY, id);
     }
 }
