@@ -45,6 +45,8 @@ public class ReviewService {
 
     public void delete(Long id) {
         findById(id);
+        reviewLikeDbStorage.deleteAllByReviewId(id);
+        reviewDislikeDbStorage.deleteAllByReviewId(id);
         reviewDbStorage.delete(id);
     }
 
