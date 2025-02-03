@@ -8,6 +8,8 @@ import java.util.Optional;
 
 public interface FilmDbStorage {
 
+    List<Film> searchByFilmsAndDirectors(String query, List<String> searchParams);
+
     List<Film> findLikedFilmsByUserId(long userId);
 
     Optional<Film> findById(long id);

@@ -6,9 +6,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorage {
@@ -82,6 +80,23 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
                     WHERE user_id = ?))
             ORDER BY like_count DESC
             """;
+    private static final String FIND_FILMS_BY_DIRECTOR_AND_FILM_NAME_QUERY = """
+            SELECT DISTINCT f.*, m."name" AS mpa_name, COALESCE(likes.like_count, 0) AS like_count
+            FROM filmorate.films f
+            JOIN filmorate.MPA m ON f.MPA_ID = m.id
+            LEFT JOIN (
+                 SELECT l.FILM_ID, COUNT(*) AS like_count
+                 FROM filmorate.likes l
+                 GROUP BY l.FILM_ID
+            ) likes ON f.film_id = likes.FILM_ID
+            WHERE f."name" LIKE ? OR f.FILM_ID IN (
+                    SELECT FILM_ID
+                    FROM filmorate.FILM_DIRECTORS fd2
+                    WHERE DIRECTOR_ID IN (SELECT d2.DIRECTOR_ID
+                                        FROM filmorate.DIRECTORS d2
+                                        WHERE d2."name" LIKE ?))
+            ORDER BY like_count DESC
+            """;
     private static final String INSERT_FILM_LIKE_QUERY = """
             INSERT INTO filmorate.likes (film_id, user_id)
             VALUES(?, ?)
@@ -124,6 +139,13 @@ public class FilmDbStorageImpl extends BaseStorage<Film> implements FilmDbStorag
     public FilmDbStorageImpl(JdbcOperations jdbc, FilmRowMapper filmRowMapper) {
         super(jdbc);
         this.filmRowMapper = filmRowMapper;
+    }
+
+    @Override
+    public List<Film> searchByFilmsAndDirectors(String query, List<String> by) {
+        String searchTitle = by.contains("title") ? "%" + query + "%" : null;
+        String searchDirector = by.contains("director") ? "%" + query + "%" : null;
+        return findMany(filmRowMapper, FIND_FILMS_BY_DIRECTOR_AND_FILM_NAME_QUERY, searchTitle, searchDirector);
     }
 
     @Override

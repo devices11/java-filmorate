@@ -2,10 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
@@ -36,6 +33,32 @@ public class FilmService {
                 .toList();
     }
 
+    public List<Film> searchByTitleAndDirector(String query, List<String> by) {
+        if (query.isBlank()) {
+            throw new ValidationException("Задан пустой поисковый запрос");
+        }
+        boolean paramsCheck = by.stream().limit(2)
+                .allMatch(searchBy -> searchBy.equals("title") || searchBy.equals("director"));
+        if (!paramsCheck) {
+            throw new ValidationException("указан неправильный параметр запроса");
+        }
+        Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
+        Map<Long, List<Director>> directorsByFilmId = directorStorage.findAllByFilms();
+        List<Film> films = filmStorage.searchByFilmsAndDirectors(query, by);
+        films.forEach(film -> {
+            film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of()));
+            film.setDirectors(directorsByFilmId.getOrDefault(film.getId(), List.of()));
+        });
+        return films.stream().sorted((o1, o2) -> {
+            if (!o1.getDirectors().isEmpty() && o2.getDirectors().isEmpty()) {
+                return 1;
+            }
+            if (o1.getDirectors().isEmpty() && !o2.getDirectors().isEmpty()) {
+                return -1;
+            }
+            return 0;
+        }).toList();
+    }
 
     public Film findById(Long id) {
         return filmStorage.findById(id)
