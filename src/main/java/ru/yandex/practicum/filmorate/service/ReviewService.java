@@ -36,7 +36,7 @@ public class ReviewService {
         filmService.findById(review.getFilmId());
         userService.findById(review.getUserId());
         Review resultReview = reviewDbStorage.create(review);
-            eventService.addEvent(review.getUserId().intValue(), Event.EventType.REVIEW, Event.Operation.ADD, review.getReviewId().intValue());
+        eventService.addEvent(review.getUserId().intValue(), Event.EventType.REVIEW, Event.Operation.ADD, review.getReviewId().intValue());
         return resultReview;
     }
 
@@ -44,7 +44,7 @@ public class ReviewService {
         Review reviewFromStorage = findById(review.getReviewId());
         reviewFromStorage.setContent(review.getContent());
         reviewFromStorage.setIsPositive(review.getIsPositive());
-        Review resultReview =reviewDbStorage.update(reviewFromStorage);
+        Review resultReview = reviewDbStorage.update(reviewFromStorage);
         eventService.addEvent(reviewFromStorage.getUserId().intValue(), Event.EventType.REVIEW, Event.Operation.UPDATE, review.getReviewId().intValue());
         return resultReview;
     }
