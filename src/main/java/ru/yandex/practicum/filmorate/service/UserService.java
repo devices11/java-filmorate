@@ -2,7 +2,9 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewDislikeDbStorage;
@@ -21,6 +23,7 @@ public class UserService {
     private final ReviewDbStorage reviewDbStorage;
     private final ReviewLikeDbStorage reviewLikeDbStorage;
     private final ReviewDislikeDbStorage reviewDislikeDbStorage;
+    private final EventDbStorage eventStorage;
 
     public User findById(Long id) {
         return userStorage.findById(id)
@@ -76,7 +79,7 @@ public class UserService {
         if (isRequestPending) {
             userStorage.updateFriend(true, friendId, userId);
         }
-
+            eventStorage.addEvent(userId.intValue(), Event.EventType.FRIEND, Event.Operation.ADD, friendId.intValue());
         userStorage.addFriend(isRequestPending, userId, friendId);
     }
 
@@ -85,6 +88,7 @@ public class UserService {
         if (getFriendForUser(userId, friendId).isPresent()) {
             userStorage.deleteFriend(userId, friendId);
         }
+            eventStorage.addEvent(userId.intValue(), Event.EventType.FRIEND, Event.Operation.REMOVE, friendId.intValue());
     }
 
     public Collection<User> commonFriends(Long id, Long otherId) {

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
@@ -23,6 +24,7 @@ public class FilmService {
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
     private final DirectorDbStorage directorStorage;
+    private final EventDbStorage eventStorage;
     private final ReviewLikeDbStorage reviewLikeDbStorage;
     private final ReviewDislikeDbStorage reviewDislikeDbStorage;
 
@@ -124,12 +126,14 @@ public class FilmService {
     public void setLike(Long filmId, Long userId) {
         findById(filmId);
         checkUser(userId);
+            eventStorage.addEvent(userId.intValue(), Event.EventType.LIKE, Event.Operation.ADD, filmId.intValue());
         filmStorage.addLike(filmId, userId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
         findById(filmId);
         checkUser(userId);
+            eventStorage.addEvent(userId.intValue(), Event.EventType.LIKE, Event.Operation.REMOVE,filmId.intValue());
         filmStorage.deleteLike(filmId, userId);
     }
 
