@@ -15,4 +15,8 @@ public interface ReviewDbStorage {
     void delete(Long id);
 
     Collection<Review> findReviews(Long filmId, int count);
+
+    Integer updateUsefulByLikesByUserIdForDelete(Long id);
+
+    Integer updateUsefulByDislikesByUserIdForDelete(Long id);
 }

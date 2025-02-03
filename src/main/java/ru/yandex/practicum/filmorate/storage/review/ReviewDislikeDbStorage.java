@@ -10,4 +10,10 @@ public interface ReviewDislikeDbStorage {
     ReviewDislike create(ReviewDislike reviewDislike);
 
     void delete(Long id);
+
+    void deleteAllByFilmId(Long filmId);
+
+    void deleteAllByReviewId(Long reviewId);
+
+    void deleteAllByUserId(Long id);
 }

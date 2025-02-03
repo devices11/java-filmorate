@@ -37,6 +37,18 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
             DELETE FROM FILMORATE.reviews WHERE review_id = ?
             """;
 
+    private static final String UPDATE_USEFUL_BY_LIKES_FOR_DELETE_USER_QUERY = """
+            UPDATE filmorate.reviews
+                SET useful = useful - 1
+                WHERE review_id IN (SELECT review_id FROM filmorate.reviews_likes WHERE user_id = ?)
+            """;
+
+    private static final String UPDATE_USEFUL_BY_DISLIKES_FOR_DELETE_USER_QUERY = """
+            UPDATE filmorate.reviews
+                SET useful = useful + 1
+                WHERE review_id IN (SELECT review_id FROM filmorate.reviews_dislikes WHERE user_id = ?)
+            """;
+
     public ReviewDbStorageImpl(JdbcOperations jdbc, ReviewRowMapper reviewRowMapper) {
         super(jdbc);
         this.reviewRowMapper = reviewRowMapper;
@@ -79,5 +91,15 @@ public class ReviewDbStorageImpl extends BaseStorage<Review> implements ReviewDb
     @Override
     public void delete(Long id) {
         delete(DELETE_QUERY, id);
+    }
+
+    @Override
+    public Integer updateUsefulByLikesByUserIdForDelete(Long id) {
+        return update(UPDATE_USEFUL_BY_LIKES_FOR_DELETE_USER_QUERY, id);
+    }
+
+    @Override
+    public Integer updateUsefulByDislikesByUserIdForDelete(Long id) {
+        return update(UPDATE_USEFUL_BY_DISLIKES_FOR_DELETE_USER_QUERY, id);
     }
 }

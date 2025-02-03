@@ -20,8 +20,21 @@ public class ReviewLikeDbStorageImpl extends BaseStorage<ReviewLike> implements 
             INSERT INTO filmorate.reviews_likes (user_id, review_id) VALUES (?, ?)
             """;
 
+    private static final String DELETE_ALL_BY_FILM_QUERY = """
+            DELETE FROM filmorate.reviews_likes
+            WHERE review_id IN (SELECT review_id FROM filmorate.reviews WHERE film_id = ?)
+            """;
+
+    private static final String DELETE_ALL_BY_REVIEW_QUERY = """
+            DELETE FROM filmorate.reviews_likes WHERE review_id = ?
+            """;
+
     private static final String DELETE_QUERY = """
             DELETE FROM filmorate.reviews_likes WHERE reviews_like_id = ?
+            """;
+
+    private static final String DELETE_ALL_BY_USER_ID = """
+            DELETE FROM filmorate.reviews_likes WHERE user_id = ?
             """;
 
     public ReviewLikeDbStorageImpl(JdbcOperations jdbc, ReviewLikeRowMapper reviewLikeRowMapper) {
@@ -44,5 +57,20 @@ public class ReviewLikeDbStorageImpl extends BaseStorage<ReviewLike> implements 
     @Override
     public void delete(Long id) {
         delete(DELETE_QUERY, id);
+    }
+
+    @Override
+    public void deleteAllByFilmId(Long filmId) {
+        delete(DELETE_ALL_BY_FILM_QUERY, filmId);
+    }
+
+    @Override
+    public void deleteAllByReviewId(Long reviewId) {
+        delete(DELETE_ALL_BY_REVIEW_QUERY, reviewId);
+    }
+
+    @Override
+    public void deleteAllByUserId(Long userId) {
+        delete(DELETE_ALL_BY_USER_ID, userId);
     }
 }

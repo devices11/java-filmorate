@@ -300,7 +300,7 @@ public class FilmTests {
     @Test
     void deleteLike() throws Exception {
         mockMvc.perform(delete("/films/1/like/1").contentType("application/json"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
     }
 
     @DisplayName("DELETE /films/{id}/like/{userId}. Удаление лайка к фильму по id")

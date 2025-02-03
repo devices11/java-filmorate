@@ -34,11 +34,8 @@ public class BaseStorage<T> {
         return rowsDeleted > 0;
     }
 
-    protected void update(String query, Object... params) {
-        int rowsUpdated = jdbc.update(query, params);
-        if (rowsUpdated == 0) {
-            throw new InternalServerException("Не удалось обновить данные");
-        }
+    protected int update(String query, Object... params) {
+        return jdbc.update(query, params);
     }
 
     protected int insert(String query, Object... params) {
