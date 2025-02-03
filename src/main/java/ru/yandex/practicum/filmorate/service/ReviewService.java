@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.ReviewDislike;
 import ru.yandex.practicum.filmorate.model.ReviewLike;
@@ -21,6 +22,7 @@ public class ReviewService {
     private final FilmService filmService;
     private final ReviewLikeService reviewLikeService;
     private final ReviewDislikeService reviewDislikeService;
+    private final EventService eventService;
 
     public Review findById(Long id) {
         return reviewDbStorage.findById(id)
@@ -31,18 +33,40 @@ public class ReviewService {
         review.setUseful(0);
         filmService.findById(review.getFilmId());
         userService.findById(review.getUserId());
-        return reviewDbStorage.create(review);
+        Review resultReview = reviewDbStorage.create(review);
+        try{
+            eventService.addEvent(review.getUserId().intValue(), Event.EventType.REVIEW, Event.Operation.ADD, review.getReviewId().intValue());
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("Проблема при создании ревью");
+        }
+        return resultReview;
     }
 
     public Review update(Review review) {
         Review reviewFromStorage = findById(review.getReviewId());
         reviewFromStorage.setContent(review.getContent());
         reviewFromStorage.setIsPositive(review.getIsPositive());
-        return reviewDbStorage.update(reviewFromStorage);
+        Review resultReview =reviewDbStorage.update(reviewFromStorage);
+        try{
+            eventService.addEvent(review.getUserId().intValue(), Event.EventType.REVIEW, Event.Operation.UPDATE, review.getReviewId().intValue());
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("Проблема в обновлении ревью");
+        }
+
+        return resultReview;
     }
 
     public void delete(Long id) {
         findById(id);
+        try{
+            eventService.addEvent(findById(id).getUserId().intValue(), Event.EventType.REVIEW, Event.Operation.REMOVE, findById(id).getReviewId().intValue());
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Проблема в удалении ревью");
+        }
+
         reviewDbStorage.delete(id);
     }
 

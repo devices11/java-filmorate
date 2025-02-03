@@ -2,7 +2,9 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
@@ -15,6 +17,7 @@ import java.util.*;
 public class UserService {
     private final UserDbStorage userStorage;
     private final FilmDbStorage filmStorage;
+    private final EventDbStorage eventStorage;
 
     public User findById(Long id) {
         return userStorage.findById(id)
@@ -70,7 +73,12 @@ public class UserService {
         if (isRequestPending) {
             userStorage.updateFriend(true, friendId, userId);
         }
-
+        try{
+            eventStorage.addEvent(userId.intValue(), Event.EventType.FRIEND, Event.Operation.ADD, friendId.intValue());
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("Проблема в добавлении друга");
+        }
         userStorage.addFriend(isRequestPending, userId, friendId);
     }
 
@@ -78,6 +86,12 @@ public class UserService {
         validateUserExistence(userId, friendId);
         if (getFriendForUser(userId, friendId).isPresent()) {
             userStorage.deleteFriend(userId, friendId);
+        }
+        try{
+            eventStorage.addEvent(userId.intValue(), Event.EventType.FRIEND, Event.Operation.REMOVE, friendId.intValue());
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("Проблема в удалении дурга");
         }
     }
 

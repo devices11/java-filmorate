@@ -4,18 +4,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.EventService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.util.validation.groups.Create;
 import ru.yandex.practicum.filmorate.util.validation.groups.Update;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+    private final EventService eventService;
 
     @GetMapping("/{id}")
     public User findById(@PathVariable long id) {
@@ -68,4 +72,10 @@ public class UserController {
                                           @PathVariable long otherId) {
         return userService.commonFriends(id, otherId);
     }
+
+    @GetMapping("/{id}/feed")
+    private List<Event> findAllEventsByUserId(@PathVariable Long id){
+        return eventService.findAllEventsByUserId(id);
+    }
+
 }

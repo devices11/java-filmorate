@@ -2,11 +2,9 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
@@ -24,6 +22,7 @@ public class FilmService {
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
     private final DirectorDbStorage directorStorage;
+    private final EventDbStorage eventStorage;
 
     public List<Film> findCommonFilms(long userId, long friendId) {
         checkUser(userId);
@@ -97,12 +96,26 @@ public class FilmService {
     public void setLike(Long filmId, Long userId) {
         findById(filmId);
         checkUser(userId);
+        try{
+            eventStorage.addEvent(userId.intValue(), Event.EventType.LIKE, Event.Operation.ADD, filmId.intValue());
+        }catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Проблема в добавлении лайка");
+        }
+
         filmStorage.addLike(filmId, userId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
         findById(filmId);
         checkUser(userId);
+        try{
+            eventStorage.addEvent(userId.intValue(), Event.EventType.LIKE, Event.Operation.REMOVE,filmId.intValue());
+        }catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Проблема в удалении лайка");
+        }
+
         filmStorage.deleteLike(filmId, userId);
     }
 
