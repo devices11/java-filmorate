@@ -2,8 +2,12 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
@@ -13,7 +17,13 @@ import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import static ru.yandex.practicum.filmorate.model.Event.EventType.LIKE;
+import static ru.yandex.practicum.filmorate.model.Event.Operation.ADD;
+import static ru.yandex.practicum.filmorate.model.Event.Operation.REMOVE;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +33,7 @@ public class FilmService {
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
     private final DirectorDbStorage directorStorage;
+    private final EventDbStorage eventStorage;
     private final ReviewLikeDbStorage reviewLikeDbStorage;
     private final ReviewDislikeDbStorage reviewDislikeDbStorage;
 
@@ -73,14 +84,7 @@ public class FilmService {
 
     public Collection<Film> findAll() {
         Collection<Film> films = filmStorage.findAll();
-        Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
-        Map<Long, List<Director>> directorsByFilmId = directorStorage.findAllByFilms();
-        films.forEach(film -> {
-            film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of()));
-            film.setDirectors(directorsByFilmId.getOrDefault(film.getId(), List.of()));
-        });
-
-        return films;
+        return setGenresAndDirectorsToFilms(films);
     }
 
     public Film add(Film film) {
@@ -124,38 +128,26 @@ public class FilmService {
     public void setLike(Long filmId, Long userId) {
         findById(filmId);
         checkUser(userId);
+        eventStorage.addEvent(userId.intValue(), LIKE, ADD, filmId.intValue());
         filmStorage.addLike(filmId, userId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
         findById(filmId);
         checkUser(userId);
+        eventStorage.addEvent(userId.intValue(), LIKE, REMOVE, filmId.intValue());
         filmStorage.deleteLike(filmId, userId);
     }
 
     public Collection<Film> findPopular(Integer count, Long genreId, Integer year) {
         Collection<Film> films = filmStorage.findPopular(count, genreId, year);
-        Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
-        Map<Long, List<Director>> directorsByFilmId = directorStorage.findAllByFilms();
-        films.forEach(film -> {
-            film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of()));
-            film.setDirectors(directorsByFilmId.getOrDefault(film.getId(), List.of()));
-        });
-
-        return films;
+        return setGenresAndDirectorsToFilms(films);
     }
 
     public Collection<Film> getFilmsByDirector(Integer directorId, String sortBy) {
         checkDirector(directorId);
         Collection<Film> films = filmStorage.findByDirectorId(directorId, sortBy);
-        Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
-        Map<Long, List<Director>> directorsByFilmId = directorStorage.findAllByFilms();
-        films.forEach(film -> {
-            film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of()));
-            film.setDirectors(directorsByFilmId.getOrDefault(film.getId(), List.of()));
-        });
-
-        return films;
+        return setGenresAndDirectorsToFilms(films);
     }
 
     private void checkUser(Long userId) {
@@ -168,6 +160,17 @@ public class FilmService {
         if (directorStorage.findById(directorId).isEmpty()) {
             throw new NotFoundException("Режисер не найден");
         }
+    }
+
+    private Collection<Film> setGenresAndDirectorsToFilms(Collection<Film> films) {
+        Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
+        Map<Long, List<Director>> directorsByFilmId = directorStorage.findAllByFilms();
+        films.forEach(film -> {
+            film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of()));
+            film.setDirectors(directorsByFilmId.getOrDefault(film.getId(), List.of()));
+        });
+
+        return films;
     }
 
     private void validateFilm(Film film) {
