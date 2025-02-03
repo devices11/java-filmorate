@@ -18,5 +18,5 @@ public interface ReviewDbStorage {
 
     void deleteAllByFilmId(Long filmId);
 
-    Collection<Review> findReviewsByUserId(Long userId);
+    void deleteAllUserReviewsAndUserLikesByUserId(Long id);
 }

@@ -6,7 +6,6 @@ import ru.yandex.practicum.filmorate.model.ReviewLike;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.ReviewLikeRowMapper;
 
-import java.util.Collection;
 import java.util.Optional;
 
 @Repository
@@ -15,10 +14,6 @@ public class ReviewLikeDbStorageImpl extends BaseStorage<ReviewLike> implements 
 
     private static final String FIND_QUERY = """
             SELECT * FROM filmorate.reviews_likes WHERE user_id = ? AND review_id = ?
-            """;
-
-    private static final String FIND_REVIEWS_LIKES_BY_USER_QUERY = """
-            SELECT * FROM filmorate.reviews_likes WHERE user_id = ?
             """;
 
     private static final String INSERT_QUERY = """
@@ -69,10 +64,4 @@ public class ReviewLikeDbStorageImpl extends BaseStorage<ReviewLike> implements 
     public void deleteAllByReviewId(Long reviewId) {
         delete(DELETE_ALL_BY_REVIEW_QUERY, reviewId);
     }
-
-    @Override
-    public Collection<ReviewLike> findAllByUserId(Long userId) {
-        return findMany(reviewLikeRowMapper, FIND_REVIEWS_LIKES_BY_USER_QUERY, userId);
-    }
-
 }

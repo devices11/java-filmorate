@@ -6,7 +6,6 @@ import ru.yandex.practicum.filmorate.model.ReviewDislike;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.ReviewDislikeRowMapper;
 
-import java.util.Collection;
 import java.util.Optional;
 
 @Repository
@@ -15,10 +14,6 @@ public class ReviewDislikeDbStorageImpl extends BaseStorage<ReviewDislike> imple
 
     private static final String FIND_QUERY = """
             SELECT * FROM filmorate.reviews_dislikes WHERE user_id = ? AND review_id = ?
-            """;
-
-    private static final String FIND_REVIEWS_DISLIKES_BY_USER_QUERY = """
-            SELECT * FROM filmorate.reviews_reviews_dislikes WHERE user_id = ?
             """;
 
     private static final String INSERT_QUERY = """
@@ -68,10 +63,5 @@ public class ReviewDislikeDbStorageImpl extends BaseStorage<ReviewDislike> imple
     @Override
     public void deleteAllByReviewId(Long reviewId) {
         delete(DELETE_ALL_BY_REVIEW_QUERY, reviewId);
-    }
-
-    @Override
-    public Collection<ReviewDislike> findAllByUserId(Long userId) {
-        return findMany(reviewDislikeRowMapper, FIND_REVIEWS_DISLIKES_BY_USER_QUERY, userId);
     }
 }

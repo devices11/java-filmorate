@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.storage.review;
 
 import ru.yandex.practicum.filmorate.model.ReviewLike;
 
-import java.util.Collection;
 import java.util.Optional;
 
 public interface ReviewLikeDbStorage {
@@ -15,6 +14,4 @@ public interface ReviewLikeDbStorage {
     void deleteAllByFilmId(Long filmId);
 
     void deleteAllByReviewId(Long reviewId);
-
-    Collection<ReviewLike> findAllByUserId(Long userId);
 }
