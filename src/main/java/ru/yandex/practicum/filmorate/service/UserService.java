@@ -14,7 +14,10 @@ import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +28,7 @@ public class UserService {
     private final ReviewLikeDbStorage reviewLikeDbStorage;
     private final ReviewDislikeDbStorage reviewDislikeDbStorage;
     private final EventDbStorage eventStorage;
+    private final FilmService filmService;
 
     public User findById(Long id) {
         return userStorage.findById(id)
@@ -80,7 +84,7 @@ public class UserService {
         if (isRequestPending) {
             userStorage.updateFriend(true, friendId, userId);
         }
-            eventStorage.addEvent(userId.intValue(), Event.EventType.FRIEND, Event.Operation.ADD, friendId.intValue());
+        eventStorage.addEvent(userId.intValue(), Event.EventType.FRIEND, Event.Operation.ADD, friendId.intValue());
         userStorage.addFriend(isRequestPending, userId, friendId);
     }
 
@@ -89,7 +93,7 @@ public class UserService {
         if (getFriendForUser(userId, friendId).isPresent()) {
             userStorage.deleteFriend(userId, friendId);
         }
-            eventStorage.addEvent(userId.intValue(), Event.EventType.FRIEND, Event.Operation.REMOVE, friendId.intValue());
+        eventStorage.addEvent(userId.intValue(), Event.EventType.FRIEND, Event.Operation.REMOVE, friendId.intValue());
     }
 
     public Collection<User> commonFriends(Long id, Long otherId) {
@@ -148,8 +152,9 @@ public class UserService {
         userStorage.delete(id);
     }
 
-    public List<Film> filmsRecommendations(long userId) {
+    public Collection<Film> filmsRecommendations(long userId) {
         findById(userId);
-        return (List<Film>) filmStorage.filmsRecommendations(userId);
+        Collection<Film> films = filmStorage.filmsRecommendations(userId);
+        return filmService.setGenresAndDirectorsToFilms(films);
     }
 }
