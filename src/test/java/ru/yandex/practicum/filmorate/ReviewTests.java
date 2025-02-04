@@ -117,6 +117,26 @@ public class ReviewTests {
     }
 
     @Test
+    @DisplayName("GET users/{id}/feed. Получение события создания ревью")
+    void getEventcreateReview() throws Exception {
+        mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[24].eventType").value("REVIEW"))
+                .andExpect(jsonPath("$[24].entityId").value(1))
+                .andExpect(jsonPath("$[24].operation").value("ADD"));
+    }
+
+    @Test
+    @DisplayName("GET users/{id}/feed. Получения события обновления ревью")
+    void getEventRemoveReview() throws Exception {
+        mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[25].eventType").value("REVIEW"))
+                .andExpect(jsonPath("$[25].entityId").value(1))
+                .andExpect(jsonPath("$[25].operation").value("UPDATE"));
+    }
+
+    @Test
     @DisplayName("DELETE /reviews/{id}. Удаление отзыва")
     void removeReview() throws Exception {
         mockMvc.perform(delete("/reviews/1"))
@@ -128,28 +148,8 @@ public class ReviewTests {
     void getDeleteEventReview() throws Exception {
         mockMvc.perform(get("/users/1/feed").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[2].eventType").value("REVIEW"))
-                .andExpect(jsonPath("$[2].entityId").value(1))
-                .andExpect(jsonPath("$[2].operation").value("REMOVE"));
-    }
-
-    @Test
-    @DisplayName("GET users/{id}/feed. Получение события создания ревью")
-    void getEventcreateReview() throws Exception {
-        mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].eventType").value("REVIEW"))
-                .andExpect(jsonPath("$[0].entityId").value(1))
-                .andExpect(jsonPath("$[0].operation").value("ADD"));
-    }
-
-    @Test
-    @DisplayName("GET users/{id}/feed. Получения события обновления ревью")
-    void getEventRemoveReview() throws Exception {
-        mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[1].eventType").value("REVIEW"))
-                .andExpect(jsonPath("$[1].entityId").value(1))
-                .andExpect(jsonPath("$[1].operation").value("UPDATE"));
+                .andExpect(jsonPath("$[26].eventType").value("REVIEW"))
+                .andExpect(jsonPath("$[26].entityId").value(1))
+                .andExpect(jsonPath("$[26].operation").value("REMOVE"));
     }
 }
