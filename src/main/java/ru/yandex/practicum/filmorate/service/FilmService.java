@@ -61,6 +61,7 @@ public class FilmService {
     }
 
     public Film findById(Long id) {
+        if (id == null) throw new NullPointerException("ID имеет значение NULL");
         return filmStorage.findById(id)
                 .map(this::setGenres)
                 .map(this::setDirectors)

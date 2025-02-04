@@ -31,6 +31,7 @@ public class UserService {
     private final FilmService filmService;
 
     public User findById(Long id) {
+        if (id == null) throw new NullPointerException("ID имеет значение NULL");
         return userStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
     }

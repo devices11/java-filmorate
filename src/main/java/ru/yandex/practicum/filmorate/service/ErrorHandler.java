@@ -35,4 +35,12 @@ public class ErrorHandler {
                 "Ошибка с входным параметром.", e.getMessage()
         );
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleNullPointerException(final NullPointerException e) {
+        return new ErrorResponse(
+                "Ошибка с вохдным параметром.", e.getMessage()
+        );
+    }
 }
