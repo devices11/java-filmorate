@@ -33,4 +33,6 @@ public interface FilmDbStorage {
     void deleteAllLikeByUserId(long id);
 
     Collection<Film> findByDirectorId(int directorId, String sortBy);
+
+    Collection<Film> filmsRecommendations(long userId);
 }

@@ -158,11 +158,11 @@ public class FilmService {
 
     private void checkDirector(Integer directorId) {
         if (directorStorage.findById(directorId).isEmpty()) {
-            throw new NotFoundException("Режисер не найден");
+            throw new NotFoundException("Режиссер не найден");
         }
     }
 
-    private Collection<Film> setGenresAndDirectorsToFilms(Collection<Film> films) {
+    public Collection<Film> setGenresAndDirectorsToFilms(Collection<Film> films) {
         Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
         Map<Long, List<Director>> directorsByFilmId = directorStorage.findAllByFilms();
         films.forEach(film -> {
