@@ -340,4 +340,28 @@ public class UserTests {
                 .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
     }
 
+    @DisplayName("GET /users/{id}/feed. Получение событий добавления друга")
+    @Test
+    void getEventAddFriend() throws Exception {
+        mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.[0].eventType").value("FRIEND"))
+                .andExpect(jsonPath("$.[0].operation").value("ADD"));
+    }
+
+    @DisplayName("GET /users/{id}/feed. Получения события удаления друга")
+    @Test
+    void getEventDeleteFriend() throws Exception {
+        mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.[1].eventType").value("FRIEND"))
+                .andExpect(jsonPath("$.[1].operation").value("REMOVE"));
+    }
+
+    @DisplayName("GET /users/{id}/feed. Получение ленты по несуществующему id")
+    @Test
+    void getEventNotExistUserId() throws Exception {
+        mockMvc.perform(get("/users/99999/feed").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
 }
