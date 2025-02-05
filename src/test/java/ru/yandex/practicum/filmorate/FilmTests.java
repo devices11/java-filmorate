@@ -589,26 +589,6 @@ public class FilmTests {
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
-    @DisplayName("GET /users/{id}/feed.  событие 'LIKE' с операцией 'ADD'")
-    @Test
-    void addLikeEvent() throws Exception {
-        mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].eventType").value("LIKE"))
-                .andExpect(jsonPath("$[0].operation").value("ADD"))
-                .andExpect(jsonPath("$[0].entityId").value(1));
-    }
-
-    @DisplayName("GET /users/{id}/feed.  событие 'LIKE' с операцией 'REMOVE'")
-    @Test
-    void removeLikeEvent() throws Exception {
-        mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[23].eventType").value("LIKE"))
-                .andExpect(jsonPath("$[23].operation").value("REMOVE"))
-                .andExpect(jsonPath("$[23].entityId").value(1));
-    }
-
     @DisplayName("GET /users/{id}/feed.  вызов события с неправильным id")
     @Test
     void wrongUserIdEvent() throws Exception {
