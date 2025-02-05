@@ -602,7 +602,6 @@ public class FilmTests {
     @DisplayName("GET /users/{id}/feed.  событие 'LIKE' с операцией 'REMOVE'")
     @Test
     void removeLikeEvent() throws Exception {
-        mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON)).andReturn();
         mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[23].eventType").value("LIKE"))

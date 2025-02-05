@@ -345,8 +345,8 @@ public class UserTests {
     void getEventAddFriend() throws Exception {
         mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.[27].eventType").value("FRIEND"))
-                .andExpect(jsonPath("$.[27].operation").value("ADD"));
+                .andExpect(jsonPath("$.[0].eventType").value("FRIEND"))
+                .andExpect(jsonPath("$.[0].operation").value("ADD"));
     }
 
     @DisplayName("GET /users/{id}/feed. Получения события удаления друга")
@@ -354,8 +354,8 @@ public class UserTests {
     void getEventDeleteFriend() throws Exception {
         mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.[28].eventType").value("FRIEND"))
-                .andExpect(jsonPath("$.[28].operation").value("REMOVE"));
+                .andExpect(jsonPath("$.[1].eventType").value("FRIEND"))
+                .andExpect(jsonPath("$.[1].operation").value("REMOVE"));
     }
 
     @DisplayName("GET /users/{id}/feed. Получение ленты по несуществующему id")

@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.data.jdbc.AutoConfigureDataJd
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.yandex.practicum.filmorate.controller.ReviewController;
@@ -121,9 +122,9 @@ public class ReviewTests {
     void getEventcreateReview() throws Exception {
         mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[24].eventType").value("REVIEW"))
-                .andExpect(jsonPath("$[24].entityId").value(1))
-                .andExpect(jsonPath("$[24].operation").value("ADD"));
+                .andExpect(jsonPath("$[0].eventType").value("REVIEW"))
+                .andExpect(jsonPath("$[0].entityId").value(1))
+                .andExpect(jsonPath("$[0].operation").value("ADD"));
     }
 
     @Test
@@ -131,9 +132,9 @@ public class ReviewTests {
     void getEventRemoveReview() throws Exception {
         mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[25].eventType").value("REVIEW"))
-                .andExpect(jsonPath("$[25].entityId").value(1))
-                .andExpect(jsonPath("$[25].operation").value("UPDATE"));
+                .andExpect(jsonPath("$[1].eventType").value("REVIEW"))
+                .andExpect(jsonPath("$[1].entityId").value(1))
+                .andExpect(jsonPath("$[1].operation").value("UPDATE"));
     }
 
     @Test
@@ -146,10 +147,11 @@ public class ReviewTests {
     @Test
     @DisplayName("GET users/{id}/feed. Получение события удаления ревью")
     void getDeleteEventReview() throws Exception {
+        mockMvc.perform(get("/users/1/feed").contentType(MediaType.APPLICATION_JSON)).andReturn();
         mockMvc.perform(get("/users/1/feed").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[26].eventType").value("REVIEW"))
-                .andExpect(jsonPath("$[26].entityId").value(1))
-                .andExpect(jsonPath("$[26].operation").value("REMOVE"));
+                .andExpect(jsonPath("$[2].eventType").value("REVIEW"))
+                .andExpect(jsonPath("$[2].entityId").value(1))
+                .andExpect(jsonPath("$[2].operation").value("REMOVE"));
     }
 }
