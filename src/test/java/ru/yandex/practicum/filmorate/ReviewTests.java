@@ -1,11 +1,7 @@
 package ru.yandex.practicum.filmorate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.jdbc.AutoConfigureDataJdbc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -17,7 +13,8 @@ import ru.yandex.practicum.filmorate.controller.ReviewController;
 import ru.yandex.practicum.filmorate.model.Review;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles("test")
 @AutoConfigureDataJdbc
@@ -49,6 +46,7 @@ public class ReviewTests {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.content").value("Отличный фильм!"));
     }
+
 
     @Test
     @Order(2)
@@ -117,4 +115,12 @@ public class ReviewTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.useful").value(0));
     }
+
+    @Test
+    @DisplayName("DELETE /reviews/{id}. Удаление отзыва")
+    void removeReview() throws Exception {
+        mockMvc.perform(delete("/reviews/1"))
+                .andExpect(status().isNoContent());
+    }
+
 }

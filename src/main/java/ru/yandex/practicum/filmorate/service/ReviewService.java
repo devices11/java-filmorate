@@ -3,10 +3,11 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.ReviewDislike;
 import ru.yandex.practicum.filmorate.model.ReviewLike;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
 import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewDislikeDbStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewLikeDbStorage;
@@ -36,7 +37,7 @@ public class ReviewService {
         filmService.findById(review.getFilmId());
         userService.findById(review.getUserId());
         Review resultReview = reviewDbStorage.create(review);
-        eventService.addEvent(review.getUserId().intValue(), Event.EventType.REVIEW, Event.Operation.ADD, review.getReviewId().intValue());
+        eventService.addEvent(review.getUserId().intValue(), EventType.REVIEW, Operation.ADD, review.getReviewId().intValue());
         return resultReview;
     }
 
@@ -45,7 +46,7 @@ public class ReviewService {
         reviewFromStorage.setContent(review.getContent());
         reviewFromStorage.setIsPositive(review.getIsPositive());
         Review resultReview = reviewDbStorage.update(reviewFromStorage);
-        eventService.addEvent(reviewFromStorage.getUserId().intValue(), Event.EventType.REVIEW, Event.Operation.UPDATE, review.getReviewId().intValue());
+        eventService.addEvent(reviewFromStorage.getUserId().intValue(), EventType.REVIEW, Operation.UPDATE, review.getReviewId().intValue());
         return resultReview;
     }
 
@@ -53,7 +54,7 @@ public class ReviewService {
         findById(id);
         reviewLikeDbStorage.deleteAllByReviewId(id);
         reviewDislikeDbStorage.deleteAllByReviewId(id);
-        eventService.addEvent(findById(id).getUserId().intValue(), Event.EventType.REVIEW, Event.Operation.REMOVE, findById(id).getReviewId().intValue());
+        eventService.addEvent(findById(id).getUserId().intValue(), EventType.REVIEW, Operation.REMOVE, findById(id).getReviewId().intValue());
         reviewDbStorage.delete(id);
     }
 

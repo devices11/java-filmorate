@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.storage.event;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.EventRowMapper;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
@@ -33,7 +35,7 @@ public class EventDbStorageImpl extends BaseStorage<Event> implements EventDbSto
     }
 
     @Override
-    public void addEvent(Integer userId, Event.EventType eventType, Event.Operation operation, Integer entityId) {
+    public void addEvent(Integer userId, EventType eventType, Operation operation, Integer entityId) {
         int updatedRows = jdbc.update(INSERT_QUERY,
                 userId,
                 eventType.toString(),

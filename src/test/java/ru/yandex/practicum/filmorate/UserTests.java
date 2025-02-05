@@ -340,4 +340,10 @@ public class UserTests {
                 .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
     }
 
+    @DisplayName("GET /users/{id}/feed. Получение ленты по несуществующему id")
+    @Test
+    void getEventNotExistUserId() throws Exception {
+        mockMvc.perform(get("/users/99999/feed").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
 }

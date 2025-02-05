@@ -556,4 +556,44 @@ public class FilmTests {
         mockMvc.perform(get("/films/search?query=кин&by=директор").contentType("application/json"))
                 .andExpect(status().isBadRequest());
     }
+
+    @DisplayName("GET /users/{id}/recommendations. Проверка рекомендаций для пользователя с лайками")
+    @Test
+    public void getRecommendationsForUserWithLikes() throws Exception {
+        mockMvc.perform(get("/users/1/recommendations").contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value((1)))
+                .andExpect(jsonPath("$[0].id").value(201));
+    }
+
+    @DisplayName("GET /users/{id}/recommendations. Пользователь без лайков должен получить пустой список")
+    @Test
+    public void getRecommendationsForUserWithoutLikes() throws Exception {
+        mockMvc.perform(get("/users/2/recommendations").contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @DisplayName("GET /users/{id}/recommendations. Запрос рекомендаций для несуществующего пользователя")
+    @Test
+    public void getRecommendationsForNonExistentUser() throws Exception {
+        mockMvc.perform(get("/users/999/recommendations").contentType("application/json"))
+                .andExpect(status().isNotFound());
+    }
+
+    @DisplayName("GET /users/{id}/recommendations. Пользователю которому нечего рекомендовать")
+    @Test
+    public void getRecommendationsForUserWithNoSimilarUsers() throws Exception {
+        mockMvc.perform(get("/users/3/recommendations").contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @DisplayName("GET /users/{id}/feed.  вызов события с неправильным id")
+    @Test
+    void wrongUserIdEvent() throws Exception {
+        mockMvc.perform(get("/users/9999999/feed").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+    }
 }
