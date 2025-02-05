@@ -6,6 +6,8 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
 import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
 import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
@@ -20,10 +22,8 @@ import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import static ru.yandex.practicum.filmorate.model.Event.EventType.LIKE;
-import static ru.yandex.practicum.filmorate.model.Event.Operation.ADD;
-import static ru.yandex.practicum.filmorate.model.Event.Operation.REMOVE;
 
 @Service
 @RequiredArgsConstructor
@@ -100,7 +100,7 @@ public class FilmService {
         if (film.getMpa() != null) {
             updatedFilm.setMpa(film.getMpa());
         }
-        if (film.getGenres() != null) {
+        if (Objects.nonNull(film.getGenres())) {
             updatedFilm.setGenres(film.getGenres());
         }
         updatedFilm.setDirectors(film.getDirectors());
@@ -114,14 +114,14 @@ public class FilmService {
     public void setLike(Long filmId, Long userId) {
         findById(filmId);
         checkUser(userId);
-        eventStorage.addEvent(userId.intValue(), LIKE, ADD, filmId.intValue());
+        eventStorage.addEvent(userId.intValue(), EventType.LIKE, Operation.ADD, filmId.intValue());
         filmStorage.addLike(filmId, userId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
         findById(filmId);
         checkUser(userId);
-        eventStorage.addEvent(userId.intValue(), LIKE, REMOVE, filmId.intValue());
+        eventStorage.addEvent(userId.intValue(), EventType.LIKE, Operation.REMOVE, filmId.intValue());
         filmStorage.deleteLike(filmId, userId);
     }
 
