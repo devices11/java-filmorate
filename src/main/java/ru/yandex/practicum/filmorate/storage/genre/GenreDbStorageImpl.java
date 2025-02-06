@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.genre;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
@@ -31,8 +31,12 @@ public class GenreDbStorageImpl extends BaseStorage<Genre> implements GenreDbSto
                 FROM filmorate.film_genres fg
                 JOIN filmorate.genres g ON fg.genre_id = g.genre_id
             """;
+    private static final String DELETE_CONNECTION_BY_FILM_ID_QUERY = """
+             DELETE FROM filmorate.film_genres
+             WHERE film_id = ?
+            """;
 
-    public GenreDbStorageImpl(JdbcTemplate jdbc, GenreRowMapper genreRowMapper) {
+    public GenreDbStorageImpl(JdbcOperations jdbc, GenreRowMapper genreRowMapper) {
         super(jdbc);
         this.genreRowMapper = genreRowMapper;
     }
@@ -63,5 +67,10 @@ public class GenreDbStorageImpl extends BaseStorage<Genre> implements GenreDbSto
                                 .build(), Collectors.toList())
                 )
         );
+    }
+
+    @Override
+    public void deleteConnectionByFilmId(long id) {
+        delete(DELETE_CONNECTION_BY_FILM_ID_QUERY, id);
     }
 }

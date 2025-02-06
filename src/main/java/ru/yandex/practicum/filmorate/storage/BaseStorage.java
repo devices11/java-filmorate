@@ -1,8 +1,7 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import ru.yandex.practicum.filmorate.util.exception.InternalServerException;
@@ -14,16 +13,14 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 public class BaseStorage<T> {
-    protected final JdbcTemplate jdbc;
+    protected final JdbcOperations jdbc;
 
     protected Optional<T> findOne(RowMapper<T> mapper, String query, Object... params) {
-        try {
-            T result = jdbc.queryForObject(query, mapper, params);
-            return Optional.ofNullable(result);
-        } catch (EmptyResultDataAccessException ignored) {
-            return Optional.empty();
-        }
+        return Optional.ofNullable(
+                jdbc.query(query, mapper, params).stream().findFirst().orElse(null)
+        );
     }
+
 
     protected List<T> findMany(RowMapper<T> mapper, String query, Object... params) {
         return jdbc.query(query, mapper, params);
@@ -34,11 +31,8 @@ public class BaseStorage<T> {
         return rowsDeleted > 0;
     }
 
-    protected void update(String query, Object... params) {
-        int rowsUpdated = jdbc.update(query, params);
-        if (rowsUpdated == 0) {
-            throw new InternalServerException("Не удалось обновить данные");
-        }
+    protected int update(String query, Object... params) {
+        return jdbc.update(query, params);
     }
 
     protected int insert(String query, Object... params) {

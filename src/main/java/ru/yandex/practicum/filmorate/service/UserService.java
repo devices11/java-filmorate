@@ -2,7 +2,15 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewDislikeDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewLikeDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
@@ -16,8 +24,15 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class UserService {
     private final UserDbStorage userStorage;
+    private final FilmDbStorage filmStorage;
+    private final ReviewDbStorage reviewDbStorage;
+    private final ReviewLikeDbStorage reviewLikeDbStorage;
+    private final ReviewDislikeDbStorage reviewDislikeDbStorage;
+    private final EventDbStorage eventStorage;
+    private final FilmService filmService;
 
     public User findById(Long id) {
+        if (id == null) throw new NullPointerException("ID имеет значение NULL");
         return userStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
     }
@@ -71,7 +86,7 @@ public class UserService {
         if (isRequestPending) {
             userStorage.updateFriend(true, friendId, userId);
         }
-
+        eventStorage.addEvent(userId.intValue(), EventType.FRIEND, Operation.ADD, friendId.intValue());
         userStorage.addFriend(isRequestPending, userId, friendId);
     }
 
@@ -80,6 +95,7 @@ public class UserService {
         if (getFriendForUser(userId, friendId).isPresent()) {
             userStorage.deleteFriend(userId, friendId);
         }
+        eventStorage.addEvent(userId.intValue(), EventType.FRIEND, Operation.REMOVE, friendId.intValue());
     }
 
     public Collection<User> commonFriends(Long id, Long otherId) {
@@ -123,4 +139,24 @@ public class UserService {
         }
     }
 
+    public void delete(Long id) {
+        validateUserExistence(id);
+        userStorage.deleteAllFriendshipConnections(id);
+        filmStorage.deleteAllLikeByUserId(id);
+        int affectedByLikes = reviewDbStorage.updateUsefulByLikesByUserIdForDelete(id);
+        int affectedByDislikes = reviewDbStorage.updateUsefulByDislikesByUserIdForDelete(id);
+        if (affectedByLikes > 0) {
+            reviewLikeDbStorage.deleteAllByUserId(id);
+        }
+        if (affectedByDislikes > 0) {
+            reviewDislikeDbStorage.deleteAllByUserId(id);
+        }
+        userStorage.delete(id);
+    }
+
+    public Collection<Film> filmsRecommendations(long userId) {
+        findById(userId);
+        Collection<Film> films = filmStorage.filmsRecommendations(userId);
+        return filmService.setGenresAndDirectorsToFilms(films);
+    }
 }

@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.user;
 
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.BaseStorage;
@@ -46,8 +46,14 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
     private static final String DELETE_FRIEND_QUERY = """
             DELETE FROM FILMORATE.FRIENDS WHERE USER_ID = ? AND FRIEND_ID = ?
             """;
+    private static final String DELETE_ALL_FRIENDSHIP_CONNECTION_QUERY = """
+            DELETE FROM FILMORATE.FRIENDS WHERE USER_ID = ? OR FRIEND_ID = ?
+            """;
+    private static final String DELETE_QUERY = """
+            DELETE FROM FILMORATE.users WHERE USER_ID = ?
+            """;
 
-    public UserDbStorageImpl(JdbcTemplate jdbc, UserRowMapper userRowMapper, FriendRowMapper friendRowMapper) {
+    public UserDbStorageImpl(JdbcOperations jdbc, UserRowMapper userRowMapper, FriendRowMapper friendRowMapper) {
         super(jdbc);
         this.userRowMapper = userRowMapper;
         this.friendRowMapper = friendRowMapper;
@@ -87,20 +93,33 @@ public class UserDbStorageImpl extends BaseStorage<User> implements UserDbStorag
         return user;
     }
 
+    @Override
+    public void delete(long id) {
+        delete(DELETE_QUERY, id);
+    }
+
+    @Override
     public void addFriend(boolean confirmed, long userId, long friendId) {
         update(INSERT_FRIEND_QUERY, confirmed, userId, friendId);
     }
 
+    @Override
     public void updateFriend(boolean confirmed, long userId, long friendId) {
         update(UPDATE_FRIENDS_QUERY, confirmed, userId, friendId);
     }
 
+    @Override
     public void deleteFriend(long userId, long friendId) {
         update(DELETE_FRIEND_QUERY, userId, friendId);
     }
 
+    @Override
+    public void deleteAllFriendshipConnections(long userId) {
+        delete(DELETE_ALL_FRIENDSHIP_CONNECTION_QUERY, userId, userId);
+    }
+
+    @Override
     public List<User> getFriends(long userId) {
         return findMany(friendRowMapper, FIND_ALL_FRIENDS_QUERY, userId);
     }
-
 }

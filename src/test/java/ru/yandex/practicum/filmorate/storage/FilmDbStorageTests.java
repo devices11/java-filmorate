@@ -1,13 +1,10 @@
 package ru.yandex.practicum.filmorate.storage;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.jdbc.AutoConfigureDataJdbc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.test.context.ActiveProfiles;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
@@ -15,14 +12,16 @@ import ru.yandex.practicum.filmorate.storage.film.FilmDbStorageImpl;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureDataJdbc
-@ComponentScan({"ru.yandex.practicum.filmorate"})
 public class FilmDbStorageTests {
     private static Film film;
     private static User user;
@@ -133,7 +132,7 @@ public class FilmDbStorageTests {
     public void findPopular() {
         Film filmFromDB = filmDbStorage.add(film);
         filmDbStorage.addLike(filmFromDB.getId(), user.getId());
-        Collection<Film> populars2 = filmDbStorage.findPopular(1);
+        Collection<Film> populars2 = filmDbStorage.findPopular(1, null, null);
 
         assertThat(populars2.size()).isEqualTo(1);
 
@@ -148,5 +147,21 @@ public class FilmDbStorageTests {
         boolean isHaveLike = filmDbStorage.isLikeExists(filmFromDB.getId(), user.getId());
 
         assertThat(isHaveLike).isEqualTo(false);
+    }
+
+    @DisplayName("получение списка понравившихся фильмов")
+    @Test
+    public void getFilmsByUserId() {
+        Long userId = userDbStorage.create(user).getId();
+        List<Film> filmsFromDB = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            Film filmFromDB = filmDbStorage.add(film);
+            filmsFromDB.add(filmFromDB);
+            filmDbStorage.addLike(filmFromDB.getId(), userId);
+        }
+        List<Film> filmsUserFromDB = filmDbStorage.findLikedFilmsByUserId(userId);
+
+        assertThat(filmsUserFromDB.size()).isEqualTo(filmsFromDB.size());
+        Assertions.assertTrue(filmsUserFromDB.containsAll(filmsFromDB));
     }
 }

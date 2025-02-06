@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.util.validation.groups.Create;
 import ru.yandex.practicum.filmorate.util.validation.groups.Update;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,14 +47,40 @@ public class FilmController {
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseStatus(HttpStatus.OK)
     public void deleteLike(@PathVariable long id,
                            @PathVariable long userId) {
         filmService.deleteLike(id, userId);
     }
 
     @GetMapping("/popular")
-    public Collection<Film> findPopular(@RequestParam(name = "count", defaultValue = "10") Integer count) {
-        return filmService.findPopular(count);
+    public Collection<Film> findPopular(@RequestParam(name = "count", defaultValue = "10") int count,
+                                        @RequestParam(name = "genreId", required = false) Long genreId,
+                                        @RequestParam(name = "year", required = false) Integer year) {
+        return filmService.findPopular(count, genreId, year);
+    }
+
+    @GetMapping("/common")
+    public List<Film> findCommonFilms(@RequestParam(name = "userId") Long userId,
+                                      @RequestParam(name = "friendId") Long friendId) {
+        return filmService.findCommonFilms(userId, friendId);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable long id) {
+        filmService.delete(id);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> findByDirectorId(
+            @PathVariable int directorId,
+            @RequestParam(name = "sortBy", required = false, defaultValue = "year") String sortBy) {
+        return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public Collection<Film> searchByTitleAndDirector(@RequestParam String query, @RequestParam List<String> by) {
+        return filmService.searchByTitleAndDirector(query, by);
     }
 }

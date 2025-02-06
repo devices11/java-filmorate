@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.data.jdbc.AutoConfigureDataJd
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import ru.yandex.practicum.filmorate.controller.UserController;
@@ -21,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ActiveProfiles("test")
 @AutoConfigureDataJdbc
 @ComponentScan({"ru.yandex.practicum.filmorate"})
 @WebMvcTest(controllers = UserController.class)
@@ -280,6 +282,31 @@ public class UserTests {
                 .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
     }
 
+    @DisplayName("DELETE /users/{id}. Удаление пользователя по id")
+    @Test
+    void deleteUser() throws Exception {
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andDo(result -> {
+                    User userDb = objectMapper.readValue(result.getResponse().getContentAsString(), User.class);
+                    user.setId(userDb.getId());
+                })
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(delete("/users/" + user.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @DisplayName("DELETE /users/{id}. Удаление пользователя по id, id не найден")
+    @Test
+    void deleteUserIdNotFound() throws Exception {
+        mockMvc.perform(delete("/users/1234").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
+    }
+
     @DisplayName("GET /users/{id}/friends/common/{otherId}. Получение общего списка друзей")
     @Order(10)
     @Test
@@ -313,4 +340,10 @@ public class UserTests {
                 .andExpect(result -> assertInstanceOf(NotFoundException.class, result.getResolvedException()));
     }
 
+    @DisplayName("GET /users/{id}/feed. Получение ленты по несуществующему id")
+    @Test
+    void getEventNotExistUserId() throws Exception {
+        mockMvc.perform(get("/users/99999/feed").contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
 }

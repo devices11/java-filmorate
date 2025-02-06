@@ -2,12 +2,19 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.Operation;
+import ru.yandex.practicum.filmorate.storage.director.DirectorDbStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MpaDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewDislikeDbStorage;
+import ru.yandex.practicum.filmorate.storage.review.ReviewLikeDbStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
 import ru.yandex.practicum.filmorate.util.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.util.exception.ValidationException;
@@ -15,6 +22,8 @@ import ru.yandex.practicum.filmorate.util.exception.ValidationException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
 
 @Service
 @RequiredArgsConstructor
@@ -23,19 +32,45 @@ public class FilmService {
     private final UserDbStorage userStorage;
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
+    private final DirectorDbStorage directorStorage;
+    private final EventDbStorage eventStorage;
+    private final ReviewLikeDbStorage reviewLikeDbStorage;
+    private final ReviewDislikeDbStorage reviewDislikeDbStorage;
+
+    public List<Film> findCommonFilms(long userId, long friendId) {
+        checkUser(userId);
+        checkUser(friendId);
+        Collection<Film> filmsUser = setGenresAndDirectorsToFilms(filmStorage.findLikedFilmsByUserId(userId));
+        Collection<Film> filmsFriend = setGenresAndDirectorsToFilms(filmStorage.findLikedFilmsByUserId(friendId));
+        return filmsUser.stream()
+                .filter(filmsFriend::contains)
+                .toList();
+    }
+
+    public Collection<Film> searchByTitleAndDirector(String query, List<String> by) {
+        if (query.isBlank()) {
+            throw new ValidationException("Задан пустой поисковый запрос");
+        }
+        boolean paramsCheck = by.stream().limit(2)
+                .allMatch(searchBy -> searchBy.equals("title") || searchBy.equals("director"));
+        if (!paramsCheck) {
+            throw new ValidationException("указан неправильный параметр запроса");
+        }
+        List<Film> films = filmStorage.searchByFilmsAndDirectors(query, by);
+        return setGenresAndDirectorsToFilms(films);
+    }
 
     public Film findById(Long id) {
+        if (id == null) throw new NullPointerException("ID имеет значение NULL");
         return filmStorage.findById(id)
                 .map(this::setGenres)
+                .map(this::setDirectors)
                 .orElseThrow(() -> new NotFoundException("Фильм с указанным id не найден, id=" + id));
     }
 
     public Collection<Film> findAll() {
         Collection<Film> films = filmStorage.findAll();
-        Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
-        films.forEach(film -> film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of())));
-
-        return films;
+        return setGenresAndDirectorsToFilms(films);
     }
 
     public Film add(Film film) {
@@ -43,6 +78,7 @@ public class FilmService {
         Film filmDb = filmStorage.add(film);
         filmDb.setMpa(mpaStorage.findById(filmDb.getMpa().getId()).get());
         filmDb.setGenres(genreStorage.findAllByFilmId(filmDb.getId()));
+        filmDb.setDirectors(directorStorage.findAllByFilmId(filmDb.getId()));
         return filmDb;
     }
 
@@ -64,39 +100,63 @@ public class FilmService {
         if (film.getMpa() != null) {
             updatedFilm.setMpa(film.getMpa());
         }
-        if (film.getGenres() != null) {
+        if (Objects.nonNull(film.getGenres())) {
             updatedFilm.setGenres(film.getGenres());
         }
+        updatedFilm.setDirectors(film.getDirectors());
         Film filmDb = filmStorage.update(updatedFilm);
         filmDb.setMpa(mpaStorage.findById(filmDb.getMpa().getId()).get());
         filmDb.setGenres(genreStorage.findAllByFilmId(filmDb.getId()));
+        filmDb.setDirectors(directorStorage.findAllByFilmId(filmDb.getId()));
         return filmDb;
     }
 
     public void setLike(Long filmId, Long userId) {
         findById(filmId);
         checkUser(userId);
+        eventStorage.addEvent(userId.intValue(), EventType.LIKE, Operation.ADD, filmId.intValue());
         filmStorage.addLike(filmId, userId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
         findById(filmId);
         checkUser(userId);
+        eventStorage.addEvent(userId.intValue(), EventType.LIKE, Operation.REMOVE, filmId.intValue());
         filmStorage.deleteLike(filmId, userId);
     }
 
-    public Collection<Film> findPopular(Integer count) {
-        Collection<Film> films = filmStorage.findPopular(count);
-        Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
-        films.forEach(film -> film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of())));
+    public Collection<Film> findPopular(Integer count, Long genreId, Integer year) {
+        Collection<Film> films = filmStorage.findPopular(count, genreId, year);
+        return setGenresAndDirectorsToFilms(films);
+    }
 
-        return films;
+    public Collection<Film> getFilmsByDirector(Integer directorId, String sortBy) {
+        checkDirector(directorId);
+        Collection<Film> films = filmStorage.findByDirectorId(directorId, sortBy);
+        return setGenresAndDirectorsToFilms(films);
     }
 
     private void checkUser(Long userId) {
         if (userStorage.findById(userId).isEmpty()) {
             throw new NotFoundException("Пользователь не найден");
         }
+    }
+
+    private void checkDirector(Integer directorId) {
+        if (directorStorage.findById(directorId).isEmpty()) {
+            throw new NotFoundException("Режиссер не найден");
+        }
+    }
+
+    public Collection<Film> setGenresAndDirectorsToFilms(Collection<Film> films) {
+        Map<Long, List<Genre>> genresByFilmId = genreStorage.findAllByFilms();
+        Map<Long, List<Director>> directorsByFilmId = directorStorage.findAllByFilms();
+        films.forEach(film -> {
+            film.setGenres(genresByFilmId.getOrDefault(film.getId(), List.of()));
+            film.setDirectors(directorsByFilmId.getOrDefault(film.getId(), List.of()));
+        });
+
+        return films;
     }
 
     private void validateFilm(Film film) {
@@ -106,7 +166,7 @@ public class FilmService {
 
     private void validateMpa(Mpa mpa) {
         if (mpa != null && mpaStorage.findById(mpa.getId()).isEmpty()) {
-            throw new ValidationException("Возрастной рейтинг с указанным id не найден");
+            throw new NotFoundException("Возрастной рейтинг с указанным id не найден");
         }
     }
 
@@ -114,7 +174,7 @@ public class FilmService {
         if (genres != null) {
             genres.forEach(genre -> {
                 if (genreStorage.findById(genre.getId()).isEmpty()) {
-                    throw new ValidationException("Жанр с указанным id не найден");
+                    throw new NotFoundException("Жанр с указанным id не найден");
                 }
             });
         }
@@ -125,4 +185,18 @@ public class FilmService {
         return film;
     }
 
+    private Film setDirectors(Film film) {
+        film.setDirectors(directorStorage.findAllByFilmId(film.getId()));
+        return film;
+    }
+
+    public void delete(long id) {
+        findById(id);
+        filmStorage.deleteAllLikeByFilmId(id);
+        genreStorage.deleteConnectionByFilmId(id);
+        directorStorage.deleteConnectionByFilmId(id);
+        reviewLikeDbStorage.deleteAllByFilmId(id);
+        reviewDislikeDbStorage.deleteAllByFilmId(id);
+        filmStorage.delete(id);
+    }
 }
